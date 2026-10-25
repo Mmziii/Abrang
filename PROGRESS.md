@@ -1,3 +1,5 @@
+# Prompt 1 (done)
+
 # PROGRESS — Prompt 1 of 5: Infrastructure + theme skeleton
 
 Branch: `arena/ff7b29a9-abrang` · One PR for this whole prompt · Owner merges himself.
@@ -99,3 +101,13 @@ docker compose run --rm wpcli bash /scripts/setup.sh
 Then open http://localhost:8080 and http://localhost:8080/wp-admin (user `admin`, password `abrang-admin-1234`).
 Stop with `docker compose down`; full reset with `docker compose down -v` then the last two commands again.
 Full step-by-step with expected results: see README.md.
+
+
+# Prompt 2
+
+- [ ] Stage 1 — Product category tree
+- [ ] Stage 2 — Demo content and pages
+- [ ] Stage 3 — Header
+- [ ] Stage 4 — Footer
+- [ ] Stage 5 — Home page
+- [ ] Stage 6 — Tests, visual artifacts, docs
