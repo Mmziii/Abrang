@@ -42,7 +42,7 @@ green before this prompt is finished.
   - .env from example → up → wait healthy → setup.sh ×2 → curl/WP-CLI smoke tests → php -l; logs on failure
   - Check: CI green on the PR
 
-- [ ] **Stage 6 — Documentation (non-technical Windows user)**
+- [x] **Stage 6 — Documentation (non-technical Windows user)** — `README.md` (full Persian PowerShell walkthrough: prerequisites → clone → .env → up → setup → open site/wp-admin → stop/restart/reset + troubleshooting: port 8080 busy, Docker stopped, CRLF, forgotten password) and `docs/ARCHITECTURE.md` (git vs volumes/DB vs .env, idempotency, why). Check: every command matches the ones proven in CI; admin credentials in README match `.env.example`.
   - `README.md` full PowerShell walkthrough + troubleshooting
   - `docs/ARCHITECTURE.md` git vs database/volumes, and why
 
