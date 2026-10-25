@@ -144,11 +144,11 @@ jobs:
           docker compose run --rm wpcli wp eval-file /scripts/check-content.php
           docker compose run --rm wpcli wp term list product_cat --fields=term_id,name,slug,parent
           for slug in writing paper art-supplies school office; do
-            curl -fsS "http://localhost:8080/product-category/$slug/" -o /dev/null
+            curl -fsS "http://localhost:8080/product-category/$slug/" -o /dev/null || { echo "::error::Category $slug failed"; exit 1; }
             grep -q "/product-category/$slug/" home.html
           done
           for slug in about contact terms privacy-policy shipping returns faq; do
-            curl -fsS "http://localhost:8080/$slug/" -o /dev/null
+            curl -fsS "http://localhost:8080/$slug/" -o /dev/null || { echo "::error::Page $slug failed"; exit 1; }
           done
 
       - uses: actions/setup-node@v4
