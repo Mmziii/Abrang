@@ -1,0 +1,130 @@
+{
+	"$schema": "https://schemas.wp.org/wp/6.7/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": true,
+		"color": {
+			"palette": [
+				{
+					"slug": "paper",
+					"color": "#FBF8F3",
+					"name": "کاغذی (پس‌زمینه)"
+				},
+				{
+					"slug": "ink",
+					"color": "#2A2A2A",
+					"name": "مرکبی (متن)"
+				},
+				{
+					"slug": "indigo",
+					"color": "#2B4C7E",
+					"name": "نیلی (اصلی)"
+				},
+				{
+					"slug": "coral",
+					"color": "#E8735A",
+					"name": "مرجانی (دکمه و CTA)"
+				},
+				{
+					"slug": "teal",
+					"color": "#3FA7A0",
+					"name": "فیروزه‌ای (فرعی)"
+				},
+				{
+					"slug": "ochre",
+					"color": "#E9B949",
+					"name": "اخرایی (تأکید)"
+				},
+				{
+					"slug": "mist",
+					"color": "#E6EEF5",
+					"name": "مه‌آلود (سطوح روشن)"
+				}
+			]
+		},
+		"typography": {
+			"fontFamilies": [
+				{
+					"fontFamily": "\"Vazirmatn\", Tahoma, Arial, sans-serif",
+					"name": "وزیرمتن",
+					"slug": "Vazirmatn",
+					"fontFace": [
+						{
+							"fontFamily": "Vazirmatn",
+							"fontStyle": "normal",
+							"fontWeight": "400",
+							"fontDisplay": "swap",
+							"src": ["file:./assets/fonts/Vazirmatn-Regular.woff2"]
+						},
+						{
+							"fontFamily": "Vazirmatn",
+							"fontStyle": "normal",
+							"fontWeight": "500",
+							"fontDisplay": "swap",
+							"src": ["file:./assets/fonts/Vazirmatn-Medium.woff2"]
+						},
+						{
+							"fontFamily": "Vazirmatn",
+							"fontStyle": "normal",
+							"fontWeight": "700",
+							"fontDisplay": "swap",
+							"src": ["file:./assets/fonts/Vazirmatn-Bold.woff2"]
+						}
+					]
+				}
+			]
+		}
+	},
+	"styles": {
+		"color": {
+			"background": "var:preset|color|paper",
+			"text": "var:preset|color|ink"
+		},
+		"typography": {
+			"fontFamily": "var:preset|font-family|Vazirmatn",
+			"fontSize": "var:preset|font-size|medium",
+			"lineHeight": "1.8"
+		},
+		"elements": {
+			"heading": {
+				"color": {
+					"text": "var:preset|color|ink"
+				},
+				"typography": {
+					"fontFamily": "var:preset|font-family|Vazirmatn",
+					"fontWeight": "700",
+					"lineHeight": "1.4"
+				}
+			},
+			"link": {
+				"color": {
+					"text": "var:preset|color|indigo"
+				},
+				":hover": {
+					"color": {
+						"text": "var:preset|color|coral"
+					}
+				}
+			},
+			"button": {
+				"color": {
+					"background": "var:preset|color|coral",
+					"text": "var:preset|color|paper"
+				},
+				"border": {
+					"radius": "8px"
+				},
+				"typography": {
+					"fontFamily": "var:preset|font-family|Vazirmatn",
+					"fontWeight": "500"
+				},
+				":hover": {
+					"color": {
+						"background": "var:preset|color|indigo",
+						"text": "var:preset|color|paper"
+					}
+				}
+			}
+		}
+	}
+}
