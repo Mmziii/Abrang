@@ -116,7 +116,7 @@ html.abrang-menu-open,html.abrang-menu-open body {overflow:hidden!important}
 .abrang-home > .wp-block-group > h2 {margin-block:0 var(--wp--preset--spacing--heading)}
 .abrang-home .abrang-tiles,.abrang-home .abrang-audiences,.abrang-home .abrang-features,.abrang-home .abrang-products {margin-block:0}
 .abrang-home .abrang-hero {margin-block:0}
-.abrang-home .abrang-trust-band {box-sizing:border-box;max-width:none!important;width:auto;margin-inline:calc(-1 * clamp(16px,4vw,48px))!important;padding:40px clamp(16px,4vw,48px);background:var(--wp--preset--color--mist)}
+.abrang-home .abrang-trust-band {box-sizing:border-box;max-width:none!important;width:100vw;margin-inline:calc(50% - 50vw)!important;padding:40px clamp(16px,4vw,48px);background:var(--wp--preset--color--mist)}
 .abrang-trust-band .abrang-features {max-width:1180px;margin-inline:auto}
 .abrang-footer {margin-top:var(--wp--preset--spacing--section)!important}
 .abrang-card {border:1px solid transparent;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}

@@ -1,6 +1,7 @@
 const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+setTimeout(() => { console.error('::error::Browser test exceeded 180 seconds'); process.exit(1); }, 180000).unref();
 (async () => {
  const browser = await chromium.launch();
  fs.mkdirSync('screenshots', {recursive:true});
@@ -21,6 +22,8 @@ const fs = require('node:fs');
    });
    for (const key of ['body','heading','button']) assert.equal(fonts[key], 'Vazirmatn', `${key} font at ${width}`);
    assert.ok(fonts.loaded, `Vazirmatn loaded at ${width}`);
+   const wrongFonts = await page.locator('.abrang-home h1, .abrang-home h2, .abrang-home h3, .abrang-home .wp-block-button__link').evaluateAll(elements => elements.filter(el => !/^['"]?Vazirmatn/.test(getComputedStyle(el).fontFamily)).map(el => el.outerHTML));
+   assert.deepEqual(wrongFonts, [], 'All home headings and product/hero buttons use Vazirmatn');
   }
   await page.getByRole('heading',{name:'ایده‌هایت را به رنگ زندگی بنویس'}).waitFor();
   assert.equal(await page.locator('.abrang-tiles a').count(),5);
