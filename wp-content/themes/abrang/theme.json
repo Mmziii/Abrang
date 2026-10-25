@@ -52,7 +52,7 @@
         {
           "fontFamily": "\"Vazirmatn\", Tahoma, Arial, sans-serif",
           "name": "وزیرمتن",
-          "slug": "Vazirmatn",
+          "slug": "vazirmatn",
           "fontFace": [
             {
               "fontFamily": "Vazirmatn",
@@ -96,7 +96,7 @@
       "text": "var:preset|color|ink"
     },
     "typography": {
-      "fontFamily": "var:preset|font-family|Vazirmatn",
+      "fontFamily": "var:preset|font-family|vazirmatn",
       "fontSize": "var:preset|font-size|medium",
       "lineHeight": "1.8"
     },
@@ -106,7 +106,7 @@
           "text": "var:preset|color|ink"
         },
         "typography": {
-          "fontFamily": "var:preset|font-family|Vazirmatn",
+          "fontFamily": "var:preset|font-family|vazirmatn",
           "fontWeight": "700",
           "lineHeight": "1.4"
         }
@@ -130,7 +130,7 @@
           "radius": "8px"
         },
         "typography": {
-          "fontFamily": "var:preset|font-family|Vazirmatn",
+          "fontFamily": "var:preset|font-family|vazirmatn",
           "fontWeight": "500"
         },
         ":hover": {

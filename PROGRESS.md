@@ -159,7 +159,7 @@ docker compose run --rm wpcli bash /scripts/demo.sh
 
 # Prompt 2 — fixes
 
-- [ ] Fix 1 — Lowercase font token and computed-font browser assertions.
+- [x] Fix 1 — theme.json lowercase vazirmatn token and all references; tests/storefront.cjs checks body/headings/buttons and loaded font at 390/1440. JSON/JS syntax pass; runtime in final CI.
 - [ ] Fix 2 — Opaque, scroll-locking accordion mobile overlay and browser assertions.
 - [ ] Fix 3 — Single-row mobile header, accessible search, readable wordmark.
 - [ ] Fix 4 — Reusable aligned product cards, square product-like fixtures, indigo buttons.

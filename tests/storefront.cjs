@@ -9,6 +9,19 @@ const fs = require('node:fs');
   const response = await page.goto('http://localhost:8080/', {waitUntil:'networkidle'});
   assert.equal(response.status(),200);
   await page.evaluate(() => document.fonts.ready);
+  if (width === 390 || width === 1440) {
+   const fonts = await page.evaluate(() => {
+    const firstFamily = el => getComputedStyle(el).fontFamily.split(',')[0].replace(/["']/g, '').trim();
+    return {
+     body: firstFamily(document.body),
+     heading: firstFamily(document.querySelector('.abrang-hero h1')),
+     button: firstFamily(document.querySelector('.abrang-hero .wp-element-button')),
+     loaded: document.fonts.check('16px Vazirmatn'),
+    };
+   });
+   for (const key of ['body','heading','button']) assert.equal(fonts[key], 'Vazirmatn', `${key} font at ${width}`);
+   assert.ok(fonts.loaded, `Vazirmatn loaded at ${width}`);
+  }
   await page.getByRole('heading',{name:'ایده‌هایت را به رنگ زندگی بنویس'}).waitFor();
   assert.equal(await page.locator('.abrang-tiles a').count(),5);
   assert.ok(await page.locator('.wp-block-woocommerce-product-search').count());
