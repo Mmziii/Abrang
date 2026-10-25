@@ -106,7 +106,7 @@ Full step-by-step with expected results: see README.md.
 # Prompt 2
 
 - [x] Stage 1 — Product category tree — scripts/categories.{json,php}, setup.sh; JSON and bash syntax pass; run-twice/tree runtime checks delegated to CI (no local Docker/PHP).
-- [ ] Stage 2 — Demo content and pages
+- [x] Stage 2 — Demo content and pages — scripts/demo*, pages.php, setup.sh, .env.example; bash syntax and generated PNG signatures checked; lifecycle runtime in CI. Images are original geometric placeholders, CC0.
 - [ ] Stage 3 — Header
 - [ ] Stage 4 — Footer
 - [ ] Stage 5 — Home page
