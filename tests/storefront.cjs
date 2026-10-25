@@ -60,6 +60,9 @@ const fs = require('node:fs');
    assert.ok(boxes.every(b => b && Math.abs((b.y+b.height/2)-(boxes[0].y+boxes[0].height/2)) < 20), 'One mobile header row');
    assert.ok((await searchInput.boundingBox()).y > boxes[0].y + boxes[0].height, 'Search below top row');
   }
+  for (const button of await page.locator('.abrang-products .wp-block-button__link').all()) {
+   assert.ok(await button.evaluate(el => el.scrollWidth <= el.clientWidth + 1), 'Card button never overflows');
+  }
   if(width !== 360) await page.screenshot({path:`screenshots/home-${width}.png`,fullPage:true});
   if(width === 390) {
    await page.locator('.wp-block-navigation__responsive-container-open').click();
@@ -88,4 +91,4 @@ const fs = require('node:fs');
   await page.close();
  }
  await browser.close();
-})().catch(e => {console.error(e); process.exit(1)});
+})().catch(e => {console.error(`::error::${String(e.stack || e).replace(/\n/g, '%0A')}`); process.exit(1)});

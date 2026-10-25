@@ -98,6 +98,25 @@
     "layout": {
       "contentSize": "1180px",
       "wideSize": "1280px"
+    },
+    "spacing": {
+      "spacingSizes": [
+        {
+          "slug": "section",
+          "size": "64px",
+          "name": "فاصلهٔ بخش‌ها"
+        },
+        {
+          "slug": "section-mobile",
+          "size": "40px",
+          "name": "فاصلهٔ بخش‌ها در موبایل"
+        },
+        {
+          "slug": "heading",
+          "size": "24px",
+          "name": "فاصلهٔ عنوان"
+        }
+      ]
     }
   },
   "styles": {
