@@ -36,11 +36,11 @@ jobs:
       - name: Static checks (shell syntax, theme.json, php -l)
         run: |
           set -euo pipefail
-          bash -n scripts/setup.sh
+          for f in scripts/*.sh; do bash -n "$f"; done
           python3 -m json.tool wp-content/themes/abrang/theme.json > /dev/null
           echo "shell + JSON syntax OK"
           fail=0
-          for f in $(find wp-content/themes/abrang -name '*.php'); do
+          for f in $(find wp-content/themes/abrang scripts -name '*.php'); do
             php -l "$f" || fail=1
           done
           exit $fail
@@ -138,6 +138,47 @@ jobs:
 
           posts="$(wpcli post list --post_type=post --format=count)"
           echo "default posts left: ${posts}"; [ "$posts" = "0" ]
+
+      - name: Prompt 2 HTTP and category tree
+        run: |
+          docker compose run --rm wpcli wp eval-file /scripts/check-content.php
+          docker compose run --rm wpcli wp term list product_cat --fields=term_id,name,slug,parent
+          for slug in writing paper art-supplies school office; do
+            curl -fsS "http://localhost:8080/product-category/$slug/" -o /dev/null
+            grep -q "/product-category/$slug/" home.html
+          done
+          for slug in about contact terms privacy-policy shipping returns faq; do
+            curl -fsS "http://localhost:8080/$slug/" -o /dev/null
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Browser checks and full-page screenshots
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+          node tests/storefront.cjs
+      - name: Upload visual review artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/
+          if-no-files-found: error
+
+      - name: Demo cleanup and idempotency
+        run: |
+          set -euo pipefail
+          docker compose run --rm wpcli bash /scripts/demo-remove.sh
+          docker compose run --rm wpcli bash /scripts/demo-remove.sh
+          count=$(docker compose run --rm wpcli wp post list --post_type=product,attachment --meta_key=_abrang_demo --meta_value=1 --format=count)
+          [ "$count" = "0" ]
+          docker compose run --rm wpcli bash /scripts/demo.sh
+          docker compose run --rm wpcli bash /scripts/demo.sh
+          count=$(docker compose run --rm wpcli wp post list --post_type=product --meta_key=_abrang_demo --meta_value=1 --format=count)
+          [ "$count" = "12" ]
+          docker compose run --rm wpcli wp eval 'if (file_exists(WP_CONTENT_DIR . "/debug.log")) { $log = file_get_contents(WP_CONTENT_DIR . "/debug.log"); if (preg_match("~abrang|/scripts/~i", $log)) { WP_CLI::error($log); } }'
 
       - name: Dump container logs (only on failure)
         if: failure()

@@ -110,4 +110,4 @@ Full step-by-step with expected results: see README.md.
 - [x] Stage 3 — Header — parts/header.html, wordmark.svg, theme.json, style.css; inline slug navigation and JSON checked; browser checks in CI.
 - [x] Stage 4 — Footer — parts/footer.html, style.css; seven slug links and no fake badges verified; mobile rendering checked in CI.
 - [x] Stage 5 — Home page — templates/front-page.html, six patterns, functions.php, wash.svg, style.css, setup.sh; six pattern references and shell syntax checked; runtime grids and empty-sale behavior covered by CI.
-- [ ] Stage 6 — Tests, visual artifacts, docs
+- [x] Stage 6 — Tests, visual artifacts, docs — CI, tests/storefront.cjs, check-content.php, compose, README, ARCHITECTURE; YAML/JSON/JS/shell syntax passed locally; runtime and screenshots pending CI verification below.

@@ -52,6 +52,9 @@ services:
       WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env (copy .env.example to .env first)}
       # 1 = WP_DEBUG on (PHP warnings visible while developing).
       WORDPRESS_DEBUG: ${WP_DEBUG:-1}
+      WORDPRESS_CONFIG_EXTRA: |
+        define( 'WP_DEBUG_LOG', true );
+        define( 'WP_DEBUG_DISPLAY', false );
     volumes:
       - wp_data:/var/www/html
       # Our theme, live-mounted from this repo (edits apply immediately).
