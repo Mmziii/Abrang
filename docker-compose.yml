@@ -1,0 +1,93 @@
+# =============================================================================
+# Abrang (آبرنگ) — local development stack
+#
+#   docker compose up -d        start database + WordPress (http://localhost:8080)
+#   docker compose down         stop everything (data is kept in Docker volumes)
+#   docker compose down -v      stop and DELETE all local data (start from zero)
+#
+# WP-CLI (one-off commands, container is removed afterwards):
+#   docker compose run --rm wpcli bash /scripts/setup.sh   <- provisioning
+#   docker compose run --rm wpcli wp plugin list           <- any WP-CLI command
+#
+# All settings come from the .env file (copy .env.example to .env first).
+# WordPress core files and uploads live in the named volume "wp_data";
+# ONLY the theme folder is shared with this repo, so theme edits apply live.
+# (No top-level "version:" key — it is obsolete in Docker Compose v2.)
+# =============================================================================
+
+services:
+
+  # --- Database ---------------------------------------------------------------
+  db:
+    image: mariadb:11
+    container_name: abrang-db
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-abrang}
+      MYSQL_USER: ${MYSQL_USER:-abrang}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env (copy .env.example to .env first)}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env (copy .env.example to .env first)}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+
+  # --- WordPress (Apache + PHP 8.3) -------------------------------------------
+  wordpress:
+    image: wordpress:php8.3-apache
+    container_name: abrang-wordpress
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WP_PORT:-8080}:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE:-abrang}
+      WORDPRESS_DB_USER: ${MYSQL_USER:-abrang}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env (copy .env.example to .env first)}
+      # 1 = WP_DEBUG on (PHP warnings visible while developing).
+      WORDPRESS_DEBUG: ${WP_DEBUG:-1}
+    volumes:
+      - wp_data:/var/www/html
+      # Our theme, live-mounted from this repo (edits apply immediately).
+      - ./wp-content/themes/abrang:/var/www/html/wp-content/themes/abrang
+
+  # --- WP-CLI (provisioning & maintenance; run on demand only) -----------------
+  # Lives behind the "tools" profile so `docker compose up -d` does NOT start
+  # it; `docker compose run --rm wpcli ...` starts it for a single command.
+  wpcli:
+    image: wordpress:cli-php8.3
+    container_name: abrang-wpcli
+    profiles: ["tools"]
+    # The wordpress image runs Apache as www-data = uid 33. The cli image's
+    # own www-data is a DIFFERENT uid, so pin 33:33 here — otherwise files
+    # WP-CLI creates in the shared volume (plugins, .htaccess) would get the
+    # wrong owner and WordPress could not read/write them.
+    user: "33:33"
+    depends_on:
+      db:
+        condition: service_healthy
+      wordpress:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE:-abrang}
+      WORDPRESS_DB_USER: ${MYSQL_USER:-abrang}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env (copy .env.example to .env first)}
+    volumes:
+      - wp_data:/var/www/html
+      - ./wp-content/themes/abrang:/var/www/html/wp-content/themes/abrang
+      # Provisioning scripts, read-only (run: bash /scripts/setup.sh).
+      - ./scripts:/scripts:ro
+
+# Named volumes: survive `docker compose down`, deleted only by `down -v`.
+volumes:
+  db_data:
+  wp_data:

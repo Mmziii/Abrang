@@ -19,7 +19,7 @@ green before this prompt is finished.
   - `.env.example` (all variables, placeholders only)
   - `README.md` skeleton (filled in Stage 6)
 
-- [ ] **Stage 2 — Docker Compose dev environment**
+- [x] **Stage 2 — Docker Compose dev environment** — `docker-compose.yml` (db mariadb:11 + healthcheck, wordpress php8.3-apache, wpcli cli-php8.3 user 33:33 behind `tools` profile, theme bind-mounted, scripts mounted ro at /scripts). Check: YAML parsed + structure asserted locally; runtime check (`up -d` + HTTP 200) runs in Stage 5 CI (no Docker in agent sandbox).
   - `db` mariadb:11 + named volume + healthcheck; `wordpress` php8.3-apache :8080, waits for healthy db; `wpcli` wordpress:cli-php8.3 sharing volumes, user 33:33
   - Theme dir bind-mounted live; core + uploads in named volumes; config from `.env`
   - Check: `docker compose up -d` up, http://localhost:8080 responds (via CI)
