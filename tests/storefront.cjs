@@ -28,6 +28,13 @@ const fs = require('node:fs');
   assert.ok(await page.locator('.wp-block-woocommerce-mini-cart').count());
   assert.ok(await page.locator('.abrang-products .wc-block-product-template > li').count() >= 8);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Overflow at ${width}`);
+  const searchInput = page.locator('.wp-block-woocommerce-product-search input[type="search"], .wp-block-woocommerce-product-search input[name="s"]').first();
+  assert.equal(await searchInput.getAttribute('placeholder'), 'جستجوی محصولات…');
+  if (width < 782) {
+   const boxes = await Promise.all(['.wp-block-navigation__responsive-container-open','.abrang-wordmark','.wp-block-woocommerce-customer-account','.wp-block-woocommerce-mini-cart'].map(s => page.locator(s).first().boundingBox()));
+   assert.ok(boxes.every(b => b && Math.abs((b.y+b.height/2)-(boxes[0].y+boxes[0].height/2)) < 20), 'One mobile header row');
+   assert.ok((await searchInput.boundingBox()).y > boxes[0].y + boxes[0].height, 'Search below top row');
+  }
   if(width !== 360) await page.screenshot({path:`screenshots/home-${width}.png`,fullPage:true});
   if(width === 390) {
    await page.locator('.wp-block-navigation__responsive-container-open').click();

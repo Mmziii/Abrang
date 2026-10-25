@@ -36,3 +36,14 @@
  mobile.addEventListener('change', syncMenu);
  syncMenu();
 })();
+
+/* Preserve the search label for assistive technology, use an explicit magnifier. */
+document.querySelectorAll('.wp-block-woocommerce-product-search').forEach(search => {
+ const input = search.querySelector('input[type="search"], input[name="s"]');
+ if (input) input.placeholder = 'جستجوی محصولات…';
+ search.querySelectorAll('label').forEach(label => label.classList.add('screen-reader-text'));
+ search.querySelectorAll('button[type="submit"], button.wp-block-search__button').forEach(button => {
+  button.setAttribute('aria-label', 'جستجوی محصولات');
+  button.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>';
+ });
+});

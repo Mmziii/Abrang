@@ -65,3 +65,26 @@ html.abrang-menu-open,html.abrang-menu-open body {overflow:hidden!important}
  .abrang-header .is-menu-open .has-child[data-abrang-expanded="true"] > .wp-block-navigation__submenu-container {display:flex!important}
  .abrang-header .is-menu-open .wp-block-navigation__submenu-container .wp-block-navigation-item {font-size:15px;font-weight:400;border:0;padding-block:8px}
 }
+
+/* Header grid: nav is first in DOM and shares the mobile top row with branding. */
+.abrang-header-main {display:grid!important;grid-template-columns:140px minmax(0,1fr) 44px 54px;gap:16px;align-items:center}
+.abrang-header-main nav {grid-column:1/-1;grid-row:2;margin:0!important}
+.abrang-header-main .abrang-wordmark {grid-column:1;grid-row:1;margin:0!important;font-size:40px;font-weight:700;line-height:1.4;position:relative;isolation:isolate;white-space:nowrap}
+.abrang-wordmark a {color:var(--wp--preset--color--indigo)!important;text-decoration:none}
+.abrang-wordmark:before {content:"";position:absolute;inset:-4px -10px;z-index:-1;background:var(--wp--preset--color--teal);opacity:.25;mask:url('assets/wash.svg') center/cover}
+.abrang-header-main .wp-block-woocommerce-product-search {grid-column:2;grid-row:1;margin:0!important;min-width:0}
+.abrang-header-main .wp-block-woocommerce-customer-account {grid-column:3;grid-row:1;margin:0!important}
+.abrang-header-main .wp-block-woocommerce-mini-cart {grid-column:4;grid-row:1;margin:0!important;min-width:0}
+.abrang-header-main .wp-block-woocommerce-product-search form {margin:0;width:100%}
+.abrang-header-main .wp-block-woocommerce-product-search label {position:absolute!important;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.abrang-header-main .wp-block-woocommerce-product-search input {box-sizing:border-box;min-height:44px;border:1px solid var(--wp--preset--color--indigo);border-radius:10px;font:inherit;width:100%;min-width:0;background:var(--wp--preset--color--paper);color:var(--wp--preset--color--ink);padding-inline:12px}
+.abrang-header-main .wp-block-woocommerce-product-search button {min-width:44px;min-height:44px;border-radius:10px;background:var(--wp--preset--color--indigo);color:var(--wp--preset--color--paper);display:inline-flex;align-items:center;justify-content:center;padding:8px;border:0}
+@media(max-width:781px){
+ .abrang-header-main {grid-template-columns:40px minmax(0,1fr) 40px 48px;gap:8px;padding-block:12px}
+ .abrang-header-main nav {grid-column:1;grid-row:1;padding:0;border:0}
+ .abrang-header-main .abrang-wordmark {grid-column:2;grid-row:1;font-size:32px;justify-self:start}
+ .abrang-header-main .wp-block-woocommerce-product-search {grid-column:1/-1;grid-row:2;width:100%}
+ .abrang-header .wp-block-navigation__responsive-container-open {display:flex!important}
+ .abrang-header .wp-block-navigation__responsive-container:not(.is-menu-open) {display:none!important}
+ .abrang-header .wp-block-woocommerce-mini-cart__button {padding:4px;gap:2px}
+}
