@@ -13,7 +13,7 @@ green before this prompt is finished.
 
 ## Stages
 
-- [ ] **Stage 1 — Repo skeleton**
+- [x] **Stage 1 — Repo skeleton** — `.gitignore`, `.gitattributes`, `.env.example`, `README.md` (skeleton). Check: dummy core/uploads/dump/.env files verified ignored via `git check-ignore`; theme path stays tracked.
   - `.gitignore` (.env, WP core, uploads, DB dumps, node_modules, OS junk)
   - `.gitattributes` forcing LF for *.sh, *.php, *.json, *.yml, *.css, *.html, *.md
   - `.env.example` (all variables, placeholders only)
