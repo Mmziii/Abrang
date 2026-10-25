@@ -57,3 +57,26 @@ add_filter( 'render_block_core/group', static function ( $content, $block ) {
 add_action( 'wp_enqueue_scripts', static function () {
     wp_enqueue_script( 'abrang-storefront', get_stylesheet_directory_uri() . '/assets/storefront.js', array(), (string) filemtime( get_stylesheet_directory() . '/assets/storefront.js' ), true );
 } );
+
+/** Reusable collection image badges; no stock values are inferred in the browser. */
+add_filter( 'render_block_woocommerce/product-image', static function ( $content, $block, $instance ) {
+    $product = wc_get_product( $instance->context['postId'] ?? 0 );
+    if ( ! $product ) { return $content; }
+    $badges = '';
+    if ( $product->is_on_sale() ) { $badges .= '<span class="abrang-badge abrang-badge-sale">تخفیف</span>'; }
+    if ( ! $product->is_in_stock() ) { $badges .= '<span class="abrang-badge abrang-badge-stock">ناموجود</span>'; }
+    return '<div class="abrang-product-image">' . $content . '<div class="abrang-product-badges">' . $badges . '</div></div>';
+}, 10, 3 );
+
+add_filter( 'woocommerce_product_add_to_cart_text', static function ( $text, $product ) {
+    if ( is_admin() ) { return $text; }
+    return $product->is_type( 'simple' ) && $product->is_in_stock() && $product->is_purchasable() ? 'افزودن به سبد' : 'اطلاعات بیشتر';
+}, 10, 2 );
+
+add_filter( 'render_block_woocommerce/product-button', static function ( $content, $block, $instance ) {
+    $product = wc_get_product( $instance->context['postId'] ?? 0 );
+    if ( $product && ( ! $product->is_in_stock() || ! $product->is_type( 'simple' ) || ! $product->is_purchasable() ) ) {
+        return '<div class="abrang-secondary">' . $content . '</div>';
+    }
+    return $content;
+}, 10, 3 );

@@ -162,7 +162,7 @@ docker compose run --rm wpcli bash /scripts/demo.sh
 - [x] Fix 1 — theme.json lowercase vazirmatn token and all references; tests/storefront.cjs checks body/headings/buttons and loaded font at 390/1440. JSON/JS syntax pass; runtime in final CI.
 - [x] Fix 2 — style.css, assets/storefront.js, functions.php, browser tests: opaque viewport modal, inert background/scroll lock, collapsed accessible accordion toggles; JS syntax passes, native focus/Escape retained; runtime in CI.
 - [x] Fix 3 — header part/grid CSS and storefront.js: hamburger, live-font wordmark, account/cart on one row; full-width 44px accessible magnifier search below. JS syntax passes; row geometry/search assertions added.
-- [ ] Fix 4 — Reusable aligned product cards, square product-like fixtures, indigo buttons.
+- [x] Fix 4 — shared collection card CSS, product image/button render filters, theme tokens, patterns and original 800×800 fixtures + generator. PNG dimensions, JS/JSON pass; image square checks added; native product context supplies badges/secondary state.
 - [ ] Fix 5 — Display-only Persian digits and separators; no changes to numeric inputs/storage.
 - [ ] Fix 6 — Distinct, consistent audience and trust SVG icons.
 - [ ] Fix 7 — Token-based spacing, trust band, interactive tile states; final CI/screenshots.

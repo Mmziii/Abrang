@@ -44,6 +44,16 @@
           "slug": "coral-dark",
           "color": "#A53C29",
           "name": "مرجانی تیره"
+        },
+        {
+          "slug": "white",
+          "color": "#FFFFFF",
+          "name": "سفید"
+        },
+        {
+          "slug": "muted",
+          "color": "#62666B",
+          "name": "خاکستری خوانا"
         }
       ]
     },
@@ -117,13 +127,13 @@
         },
         ":hover": {
           "color": {
-            "text": "var:preset|color|coral-dark"
+            "text": "var:preset|color|indigo"
           }
         }
       },
       "button": {
         "color": {
-          "background": "var:preset|color|coral-dark",
+          "background": "var:preset|color|indigo",
           "text": "var:preset|color|paper"
         },
         "border": {

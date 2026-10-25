@@ -27,6 +27,12 @@ const fs = require('node:fs');
   assert.ok(await page.locator('.wp-block-woocommerce-product-search').count());
   assert.ok(await page.locator('.wp-block-woocommerce-mini-cart').count());
   assert.ok(await page.locator('.abrang-products .wc-block-product-template > li').count() >= 8);
+  const cardImages = page.locator('.abrang-products .abrang-product-image img');
+  assert.ok(await cardImages.count() > 0, 'Product image wrappers rendered');
+  for (const image of await cardImages.all()) {
+   const box = await image.boundingBox();
+   assert.ok(Math.abs(box.width-box.height) < 2, 'Square product image');
+  }
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Overflow at ${width}`);
   const searchInput = page.locator('.wp-block-woocommerce-product-search input[type="search"], .wp-block-woocommerce-product-search input[name="s"]').first();
   assert.equal(await searchInput.getAttribute('placeholder'), 'جستجوی محصولات…');

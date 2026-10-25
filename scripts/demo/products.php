@@ -21,7 +21,7 @@ foreach ( $names as $i => $name ) {
     $product->update_meta_data( '_abrang_demo', 1 );
     $id = $product->save();
     $file = wp_tempnam( 'demo.png' );
-    copy( __DIR__ . '/images/' . ($i % 5) . '.png', $file );
+    copy( __DIR__ . '/images/' . array(0,0,1,1,1,2,2,3,3,4,4,4)[$i] . '.png', $file );
     $attachment = media_handle_sideload( array( 'name'=>"$sku.png", 'tmp_name'=>$file ), $id, 'تصویر نمونه آزمایشی' );
     if ( is_wp_error( $attachment ) ) { WP_CLI::error( $attachment ); }
     update_post_meta( $attachment, '_abrang_demo', 1 );
