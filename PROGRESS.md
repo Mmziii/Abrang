@@ -24,7 +24,7 @@ green before this prompt is finished.
   - Theme dir bind-mounted live; core + uploads in named volumes; config from `.env`
   - Check: `docker compose up -d` up, http://localhost:8080 responds (via CI)
 
-- [ ] **Stage 3 — Idempotent provisioning: `scripts/setup.sh`**
+- [x] **Stage 3 — Idempotent provisioning: `scripts/setup.sh`** — `scripts/setup.sh` (bash, `set -euo pipefail`, check-before-act everywhere, `[already done]` logs). Thousand separator chosen: `,` per Persian WooCommerce docs/examples (e.g. «25,000 تومان»), documented in script header. Check: `bash -n`/`sh -n` pass, LF-only verified; run-twice runtime check in Stage 5 CI.
   - First install only: core install from .env + delete default content
   - fa_IR language, Asia/Tehran, Persian date/time, `/%postname%/`, blog_public via variable (default discouraged locally)
   - woocommerce + persian-woocommerce; IR, IRT, 0 decimals, thousand sep documented, right_space, wizard skipped, WC pages ensured
