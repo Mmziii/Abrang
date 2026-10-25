@@ -34,3 +34,6 @@ Tags: e-commerce, rtl-language-support, full-site-editing
 .abrang-header nav {padding-block:12px;border-top:1px solid var(--wp--preset--color--mist)}
 :focus-visible {outline:3px solid var(--wp--preset--color--indigo);outline-offset:4px}
 @media(max-width:781px){.abrang-header-main .wp-block-woocommerce-product-search{order:4;flex-basis:100%}.abrang-header-main .wp-block-woocommerce-customer-account{margin-inline-start:auto}}
+
+/* Footer placeholders deliberately contain no trust badges. */
+.abrang-footer {background:var(--wp--preset--color--mist);padding-block:48px;margin-top:64px}.abrang-footer h2{font-size:18px}.abrang-footer p{font-size:14px}.abrang-trust-badges{border:1px dashed var(--wp--preset--color--indigo);border-radius:10px;padding:16px}
