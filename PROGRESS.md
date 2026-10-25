@@ -156,3 +156,13 @@ docker compose run --rm wpcli bash /scripts/demo-remove.sh
 docker compose run --rm wpcli bash /scripts/demo.sh
 ```
 سایت: http://localhost:8080 — تصاویر بررسی: PR #2 → Checks → CI → Artifacts → screenshots.
+
+# Prompt 2 — fixes
+
+- [ ] Fix 1 — Lowercase font token and computed-font browser assertions.
+- [ ] Fix 2 — Opaque, scroll-locking accordion mobile overlay and browser assertions.
+- [ ] Fix 3 — Single-row mobile header, accessible search, readable wordmark.
+- [ ] Fix 4 — Reusable aligned product cards, square product-like fixtures, indigo buttons.
+- [ ] Fix 5 — Display-only Persian digits and separators; no changes to numeric inputs/storage.
+- [ ] Fix 6 — Distinct, consistent audience and trust SVG icons.
+- [ ] Fix 7 — Token-based spacing, trust band, interactive tile states; final CI/screenshots.
