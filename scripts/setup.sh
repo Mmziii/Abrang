@@ -312,6 +312,8 @@ else
   skip "rewrite flush (nothing structural changed)"
 fi
 
+wp eval-file /scripts/categories.php
+
 log "Done ✔  Abrang is ready."
 printf '    Site:  %s\n'        "$WP_URL"
 printf '    Admin: %s/wp-admin (user: %s)\n' "$WP_URL" "$WP_ADMIN_USER"

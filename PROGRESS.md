@@ -105,7 +105,7 @@ Full step-by-step with expected results: see README.md.
 
 # Prompt 2
 
-- [ ] Stage 1 — Product category tree
+- [x] Stage 1 — Product category tree — scripts/categories.{json,php}, setup.sh; JSON and bash syntax pass; run-twice/tree runtime checks delegated to CI (no local Docker/PHP).
 - [ ] Stage 2 — Demo content and pages
 - [ ] Stage 3 — Header
 - [ ] Stage 4 — Footer
