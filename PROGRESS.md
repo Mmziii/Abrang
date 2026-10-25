@@ -31,7 +31,7 @@ green before this prompt is finished.
   - Activate abrang theme (parent twentytwentyfive ensured)
   - Check: run twice on fresh stack; 2nd run = "already done" everywhere, exit 0 (via CI)
 
-- [ ] **Stage 4 — Child block theme `wp-content/themes/abrang`**
+- [x] **Stage 4 — Child block theme `wp-content/themes/abrang`** — `style.css`, `functions.php` (WooCommerce support + child textdomain only), `theme.json` v3 (7 brand palette slugs, Vazirmatn fontFace 400/500/700), `parts/header.html` + `parts/footer.html`, `screenshot.png` placeholder, `assets/fonts/` (Vazirmatn woff2 ×3 + `OFL.txt`, from official rastikerdar/vazirmatn repo, v33.003 line). Check: JSON valid + palette/font wiring asserted, woff2 magic verified, block comments balanced; `php -l`, `dir="rtl"`/`lang="fa-IR"` and local font loading verified in Stage 5 CI. No custom `templates/` — parent's templates are inherited, child parts override by slug.
   - Parent twentytwentyfive; style.css, functions.php, theme.json v3, parts/, screenshot.png
   - Vazirmatn self-hosted woff2 (400/500/700) + OFL license, via theme.json fontFace; no CDNs
   - Palette: paper, ink, indigo, coral, teal, ochre, mist; body/headings/links/buttons defaults
