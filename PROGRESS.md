@@ -174,7 +174,7 @@ All seven item groups committed on the same branch/PR #2. Added browser checks f
 loaded/computed Vazirmatn, opaque viewport menu and inert hero, collapsed/expanded
 accordion, one mobile header row and full-width search, square product images,
 Persian price text and untouched numeric input values/attributes, card button overflow.
-Final CI and regenerated screenshot artifact verification pending below.
+First full review CI verified mobile (font, menu, digits, geometry), then caught desktop overflow in the new full-width trust band. Removed redundant explicit width (negative margins already establish the full bleed); diagnostic overflow assertions retained. Final rerun pending below.
 
 Existing local demo images can be refreshed (only marked demo products/media are deleted):
 ```powershell

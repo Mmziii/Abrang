@@ -52,7 +52,13 @@ const fs = require('node:fs');
    const box = await image.boundingBox();
    assert.ok(Math.abs(box.width-box.height) < 2, 'Square product image');
   }
-  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Overflow at ${width}`);
+  const overflow = await page.evaluate(() => ({
+   width: innerWidth, scroll: document.documentElement.scrollWidth,
+   elements: [...document.querySelectorAll('body *')].filter(el => {
+    const b=el.getBoundingClientRect(); return b.width && (b.right>innerWidth+1 || b.left < -1) && getComputedStyle(el).position !== 'absolute';
+   }).slice(0,12).map(el => ({tag:el.tagName,cls:el.className,rect:el.getBoundingClientRect().toJSON()})),
+  }));
+  assert.ok(overflow.scroll <= width, `Overflow at ${width}: ${JSON.stringify(overflow)}`);
   const searchInput = page.locator('.wp-block-woocommerce-product-search input[type="search"], .wp-block-woocommerce-product-search input[name="s"]').first();
   assert.equal(await searchInput.getAttribute('placeholder'), 'جستجوی محصولات…');
   if (width < 782) {
