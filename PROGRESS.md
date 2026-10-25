@@ -110,4 +110,49 @@ Full step-by-step with expected results: see README.md.
 - [x] Stage 3 — Header — parts/header.html, wordmark.svg, theme.json, style.css; inline slug navigation and JSON checked; browser checks in CI.
 - [x] Stage 4 — Footer — parts/footer.html, style.css; seven slug links and no fake badges verified; mobile rendering checked in CI.
 - [x] Stage 5 — Home page — templates/front-page.html, six patterns, functions.php, wash.svg, style.css, setup.sh; six pattern references and shell syntax checked; runtime grids and empty-sale behavior covered by CI.
-- [x] Stage 6 — Tests, visual artifacts, docs — CI, tests/storefront.cjs, check-content.php, compose, README, ARCHITECTURE; YAML/JSON/JS/shell syntax passed locally; runtime and screenshots pending CI verification below.
+- [x] Stage 6 — Tests, visual artifacts, docs — CI, tests/storefront.cjs, check-content.php, compose, README, ARCHITECTURE; YAML/JSON/JS/shell syntax passed locally; runtime and screenshots passed CI 40234712666 and PR run 40234717895; extra exact-count/empty-sale assertions added for final CI.
+
+
+## Not done (Prompt 2)
+
+- No local Docker/PHP runtime or manual screenshot inspection: sandbox lacks Docker/PHP and blocks the Azure artifact download host. CI generated and uploaded all three screenshots successfully; owner can review them on PR #2. Browser assertions passed at 360, 390 and 1440px.
+- Out of scope as requested: custom product/archive templates, checkout/payment/shipping configuration, actual legal text, SEO and deployment. Parent/WooCommerce default templates remain in use there.
+
+## Report (Prompt 2)
+
+### ساخته شد
+- ۵ دستهٔ اصلی و ۱۵ زیردسته با slug ثابت؛ نصب تکرارشونده بدون تغییر دسته‌های موجود.
+- ۱۲ محصول ساختگی با قیمت تومان، تخفیف و موجودی متفاوت، تصاویر هندسی اصلی CC0، حذف امن با متای اختصاصی؛ هفت برگهٔ اطلاعاتی واقعی با متن موقت.
+- سربرگ و پابرگ بلوکی، جستجوی محصول، حساب کاربری، سبد خرید، منوی کشویی و منوی موبایل؛ لوگوی موقت قابل جایگزینی و جایگاه خالی نماد اعتماد.
+- صفحهٔ نخست با شش الگوی قابل استفادهٔ مجدد: معرفی، دسته‌ها، تازه‌ترین محصولات، مخاطبان، تخفیف‌ها و ویژگی‌های اعتماد؛ رنگ تیرهٔ مرجانی برای خوانایی دکمه‌ها.
+- راهنمای فارسی PowerShell، هشدار اولویت قالب‌های ذخیره‌شده در دیتابیس و روش بازنشانی آنها.
+
+### آزمون
+- CIهای 40234712666 و 40234717895 سبز: نصب تازه، setup دوبار، درخت دقیق دسته‌ها، HTTP برگه‌ها و دسته‌ها، تست‌های قبلی، PHP lint و debug.log، حذف دوباره و بازسازی دوبارهٔ نمونه‌ها.
+- Playwright: صفحهٔ کامل ۳۹۰ و ۱۴۴۰ پیکسل و منوی باز موبایل؛ بدون اسکرول افقی در ۳۶۰ پیکسل. تصاویر در artifact به نام `screenshots` در Checks مربوط به PR شمارهٔ ۲ قرار دارند.
+- بررسی محلی: syntax شل و JavaScript، JSON و YAML. اجرای واقعی در CI بود، نه محیط محلی عامل.
+
+### محدودیت‌ها
+- مشخصات تماس، شبکه‌های اجتماعی، وعدهٔ ارسال، لوگو و متن‌های معرفی نمونه‌اند؛ پیش از انتشار باید مالک تأیید/جایگزین کند. متن حقوقی واقعی در این مرحله نوشته نشده است.
+- دانلود artifact برای بازبینی دستی عامل به‌علت محدودیت شبکه ممکن نبود؛ بازبینی بصری نهایی با مالک است. قالب‌های ذخیره‌شده در Site Editor ممکن است فایل‌های جدید را بپوشانند.
+- روی سایت واقعی ABRANG_DEMO باید صفر یا غایب باشد. خاموش کردن پرچم، داده‌های آزمایشی قبلی را حذف نمی‌کند.
+
+### دستورهای مالک (پس از ادغام PR شمارهٔ ۲؛ داخل پوشهٔ پروژه در PowerShell)
+```powershell
+git pull
+docker compose up -d
+docker compose run --rm wpcli bash /scripts/setup.sh
+```
+برای نمونه‌های محلی در تنظیمات قدیمی، بدون ویرایش فایل:
+```powershell
+docker compose run --rm -e ABRANG_DEMO=1 wpcli bash /scripts/setup.sh
+```
+برای پاک کردن محصولات و تصاویر آزمایشی (برگه‌ها و محصولات واقعی حفظ می‌شوند):
+```powershell
+docker compose run --rm wpcli bash /scripts/demo-remove.sh
+```
+برای بازسازی نمونه‌ها، فقط در محیط محلی:
+```powershell
+docker compose run --rm wpcli bash /scripts/demo.sh
+```
+سایت: http://localhost:8080 — تصاویر بررسی: PR #2 → Checks → CI → Artifacts → screenshots.
