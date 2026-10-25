@@ -52,3 +52,8 @@ add_filter( 'render_block_core/group', static function ( $content, $block ) {
     }
     return $content;
 }, 10, 2 );
+
+/** Progressive enhancement for the core navigation overlay. */
+add_action( 'wp_enqueue_scripts', static function () {
+    wp_enqueue_script( 'abrang-storefront', get_stylesheet_directory_uri() . '/assets/storefront.js', array(), (string) filemtime( get_stylesheet_directory() . '/assets/storefront.js' ), true );
+} );

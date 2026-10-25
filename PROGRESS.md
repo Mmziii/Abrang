@@ -160,7 +160,7 @@ docker compose run --rm wpcli bash /scripts/demo.sh
 # Prompt 2 — fixes
 
 - [x] Fix 1 — theme.json lowercase vazirmatn token and all references; tests/storefront.cjs checks body/headings/buttons and loaded font at 390/1440. JSON/JS syntax pass; runtime in final CI.
-- [ ] Fix 2 — Opaque, scroll-locking accordion mobile overlay and browser assertions.
+- [x] Fix 2 — style.css, assets/storefront.js, functions.php, browser tests: opaque viewport modal, inert background/scroll lock, collapsed accessible accordion toggles; JS syntax passes, native focus/Escape retained; runtime in CI.
 - [ ] Fix 3 — Single-row mobile header, accessible search, readable wordmark.
 - [ ] Fix 4 — Reusable aligned product cards, square product-like fixtures, indigo buttons.
 - [ ] Fix 5 — Display-only Persian digits and separators; no changes to numeric inputs/storage.

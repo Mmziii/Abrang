@@ -48,3 +48,20 @@ Tags: e-commerce, rtl-language-support, full-site-editing
 .abrang-products .wc-block-product-template {display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:20px}
 .abrang-products img{border-radius:10px}.abrang-products li{min-width:0}.abrang-products{margin-block:24px 56px}
 @media(max-width:781px){.abrang-tiles,.abrang-features{grid-template-columns:repeat(2,minmax(0,1fr))}.abrang-audiences{grid-template-columns:1fr}.abrang-products .wc-block-product-template{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}.abrang-card{padding:18px 8px}}
+
+/* Mobile modal: never inherit the transparent native navigation surface. */
+html.abrang-menu-open,html.abrang-menu-open body {overflow:hidden!important}
+@media(max-width:781px){
+ .abrang-header .wp-block-navigation__responsive-container.is-menu-open {
+  position:fixed!important;inset:0!important;z-index:100000!important;
+  width:100%;height:100dvh;background:var(--wp--preset--color--paper)!important;
+  color:var(--wp--preset--color--ink);padding:72px 24px 32px;overflow-y:auto;
+ }
+ .abrang-header .wp-block-navigation__responsive-container-close {position:fixed;top:20px;inset-inline-end:24px;color:var(--wp--preset--color--indigo);display:block;z-index:1}
+ .abrang-header .is-menu-open .wp-block-navigation__container {width:100%;align-items:stretch!important;gap:0!important}
+ .abrang-header .is-menu-open .wp-block-navigation-item {width:100%;align-items:center!important;flex-direction:row!important;flex-wrap:wrap;justify-content:space-between;font-weight:700;border-bottom:1px solid var(--wp--preset--color--mist);padding:12px 0}
+ .abrang-header .is-menu-open .wp-block-navigation-submenu__toggle {display:flex!important;align-items:center;justify-content:center;min-width:44px;min-height:44px}
+ .abrang-header .is-menu-open .has-child > .wp-block-navigation__submenu-container {display:none!important;width:100%;padding:8px 20px 0 0!important;position:static!important;visibility:visible!important;opacity:1!important;background:var(--wp--preset--color--paper)!important}
+ .abrang-header .is-menu-open .has-child[data-abrang-expanded="true"] > .wp-block-navigation__submenu-container {display:flex!important}
+ .abrang-header .is-menu-open .wp-block-navigation__submenu-container .wp-block-navigation-item {font-size:15px;font-weight:400;border:0;padding-block:8px}
+}

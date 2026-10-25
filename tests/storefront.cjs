@@ -32,7 +32,25 @@ const fs = require('node:fs');
   if(width === 390) {
    await page.locator('.wp-block-navigation__responsive-container-open').click();
    await page.locator('.wp-block-navigation__responsive-container.is-menu-open').waitFor();
-   await page.screenshot({path:'screenshots/mobile-menu.png',fullPage:true});
+   const overlay = page.locator('.wp-block-navigation__responsive-container.is-menu-open');
+   assert.equal(await overlay.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(251, 248, 243)');
+   assert.ok(await page.locator('main').evaluate(el => el.inert), 'Hero is inert behind menu');
+   assert.equal(await page.locator('html').evaluate(el => getComputedStyle(el).overflow), 'hidden');
+   const heroObscured = await page.locator('.abrang-hero h1').evaluate(el => {
+    const r = el.getBoundingClientRect();
+    const y = Math.max(1, Math.min(innerHeight - 1, r.top + 5));
+    return !!document.elementFromPoint(innerWidth / 2, y)?.closest('.is-menu-open');
+   });
+   assert.ok(heroObscured, 'Opaque overlay covers hero hit target');
+   const submenu = overlay.locator('.wp-block-navigation__submenu-container').first();
+   assert.equal(await submenu.isVisible(), false);
+   const toggle = overlay.locator('.has-child > button').first();
+   await toggle.click();
+   assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
+   assert.equal(await submenu.isVisible(), true);
+   await toggle.click();
+   assert.equal(await submenu.isVisible(), false);
+   await page.screenshot({path:'screenshots/mobile-menu-open.png',fullPage:false});
    await page.keyboard.press('Escape');
   }
   await page.close();
