@@ -163,6 +163,6 @@ docker compose run --rm wpcli bash /scripts/demo.sh
 - [x] Fix 2 — style.css, assets/storefront.js, functions.php, browser tests: opaque viewport modal, inert background/scroll lock, collapsed accessible accordion toggles; JS syntax passes, native focus/Escape retained; runtime in CI.
 - [x] Fix 3 — header part/grid CSS and storefront.js: hamburger, live-font wordmark, account/cart on one row; full-width 44px accessible magnifier search below. JS syntax passes; row geometry/search assertions added.
 - [x] Fix 4 — shared collection card CSS, product image/button render filters, theme tokens, patterns and original 800×800 fixtures + generator. PNG dimensions, JS/JSON pass; image square checks added; native product context supplies badges/secondary state.
-- [ ] Fix 5 — Display-only Persian digits and separators; no changes to numeric inputs/storage.
+- [x] Fix 5 — setup.sh/persian-display.php enable native PW_Options[persian_price] idempotently (upstream class-price.php verified); Persian separator, display-only date filters and scoped dynamic text-node conversion. JS/shell pass; price and untouched input/attribute assertions added.
 - [ ] Fix 6 — Distinct, consistent audience and trust SVG icons.
 - [ ] Fix 7 — Token-based spacing, trust band, interactive tile states; final CI/screenshots.

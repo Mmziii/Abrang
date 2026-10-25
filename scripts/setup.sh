@@ -14,10 +14,8 @@
 # Decisions worth knowing:
 #   * Currency = IRT (تومان), added by the persian-woocommerce plugin,
 #     0 decimals, position "right with space" (e.g. «25,000 تومان»).
-#   * Thousand separator = "," — this is what Persian WooCommerce's own
-#     documentation/examples use for Toman prices; it renders unambiguously
-#     inside RTL text («25,000 تومان») in any font, incl. Vazirmatn.
-#     Decimal separator is irrelevant with 0 decimals but set to "." anyway.
+#   * Persian digits via native PW_Options[persian_price]; separator = «٬».
+#     Formatting only: product prices/quantities remain numeric in storage.
 #   * "Discourage search engines" (blog_public=0) stays ON for local dev
 #     unless WP_ALLOW_SEARCH_ENGINES=1 is set in .env (production only).
 # =============================================================================
@@ -258,7 +256,8 @@ ensure_option woocommerce_default_country    "IR"
 ensure_option woocommerce_currency           "IRT"
 ensure_option woocommerce_currency_pos       "right_space"
 ensure_option woocommerce_price_num_decimals "0"
-ensure_option woocommerce_price_thousand_sep ","
+ensure_option woocommerce_price_thousand_sep "٬"
+wp eval-file /scripts/persian-display.php
 ensure_option woocommerce_price_decimal_sep  "."
 
 onboarding="$(wp option get woocommerce_onboarding_profile --format=json 2>/dev/null || printf '')"

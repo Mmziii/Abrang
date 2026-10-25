@@ -47,3 +47,30 @@ document.querySelectorAll('.wp-block-woocommerce-product-search').forEach(search
   button.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>';
  });
 });
+
+/* Woo blocks can re-render prices/counts client-side. Only replace text nodes in
+ * display-only price, badge, quantity-summary and date elements. Never touch
+ * attributes, input.value, JSON/Store API data, contenteditable or form controls. */
+(() => {
+ const selectors = '.woocommerce-Price-amount, .wc-block-formatted-money-amount, .wc-block-components-product-price, .wc-block-mini-cart__badge, .wc-block-mini-cart__quantity-badge, .wc-block-components-order-summary-item__quantity, .product-quantity, .wp-block-post-date, time';
+ const digits = text => text.replace(/([0-9۰-۹]),(?=[0-9۰-۹])/g, '$1٬').replace(/[0-9]/g, n => '۰۱۲۳۴۵۶۷۸۹'[n]);
+ const update = () => {
+  document.querySelectorAll(selectors).forEach(element => {
+   if (element.closest('input, textarea, select, [contenteditable="true"], .wp-admin')) return;
+   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+   let node;
+   while ((node = walker.nextNode())) {
+    if (node.parentElement.closest('script, style, input, textarea, select, [contenteditable="true"]')) continue;
+    const converted = digits(node.nodeValue);
+    if (converted !== node.nodeValue) node.nodeValue = converted;
+   }
+  });
+ };
+ let scheduled = false;
+ new MutationObserver(records => {
+  if (scheduled || !records.some(r => r.type === 'childList' || r.target.parentElement?.closest(selectors))) return;
+  scheduled = true;
+  requestAnimationFrame(() => { scheduled = false; update(); });
+ }).observe(document.body, {subtree:true, childList:true, characterData:true});
+ update();
+})();

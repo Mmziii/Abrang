@@ -27,6 +27,25 @@ const fs = require('node:fs');
   assert.ok(await page.locator('.wp-block-woocommerce-product-search').count());
   assert.ok(await page.locator('.wp-block-woocommerce-mini-cart').count());
   assert.ok(await page.locator('.abrang-products .wc-block-product-template > li').count() >= 8);
+  const prices = await page.locator('.abrang-products .wp-block-woocommerce-product-price').allTextContents();
+  assert.ok(prices.length > 0);
+  for (const price of prices) {
+   assert.match(price, /[۰-۹]/, 'Persian price digits');
+   assert.doesNotMatch(price, /[0-9]/, 'No Latin price digits');
+   assert.ok(price.includes('٬'), 'Persian thousands separator');
+  }
+  // Prove enhancement ignores values and attributes even inside a price container.
+  const numericInput = await page.evaluate(async () => {
+   const box = document.createElement('div');
+   box.className = 'wc-block-components-product-price';
+   box.innerHTML = '<input type="number" value="12"><span data-value="123">123,000</span>';
+   document.body.append(box);
+   await new Promise(resolve => setTimeout(resolve, 100));
+   const result = {value:box.querySelector('input').value, attribute:box.querySelector('span').dataset.value, text:box.querySelector('span').textContent};
+   box.remove();
+   return result;
+  });
+  assert.deepEqual(numericInput, {value:'12', attribute:'123', text:'۱۲۳٬۰۰۰'});
   const cardImages = page.locator('.abrang-products .abrang-product-image img');
   assert.ok(await cardImages.count() > 0, 'Product image wrappers rendered');
   for (const image of await cardImages.all()) {

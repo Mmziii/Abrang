@@ -80,3 +80,11 @@ add_filter( 'render_block_woocommerce/product-button', static function ( $conten
     }
     return $content;
 }, 10, 3 );
+
+/** Display-only date digits. Never filter numeric timestamps, inputs, or stored data. */
+function abrang_display_digits( $text ) {
+    if ( is_admin() || ! is_string( $text ) ) { return $text; }
+    return strtr( $text, array( '0'=>'۰', '1'=>'۱', '2'=>'۲', '3'=>'۳', '4'=>'۴', '5'=>'۵', '6'=>'۶', '7'=>'۷', '8'=>'۸', '9'=>'۹' ) );
+}
+add_filter( 'wp_date', 'abrang_display_digits' );
+add_filter( 'date_i18n', 'abrang_display_digits' );
