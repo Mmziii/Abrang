@@ -52,7 +52,7 @@ document.querySelectorAll('.wp-block-woocommerce-product-search').forEach(search
  * display-only price, badge, quantity-summary and date elements. Never touch
  * attributes, input.value, JSON/Store API data, contenteditable or form controls. */
 (() => {
- const selectors = '.woocommerce-Price-amount, .wc-block-formatted-money-amount, .wc-block-components-product-price, .wc-block-mini-cart__badge, .wc-block-mini-cart__quantity-badge, .wc-block-components-order-summary-item__quantity, .product-quantity, .wp-block-post-date, time';
+ const selectors = '.woocommerce-Price-amount, .wc-block-formatted-money-amount, .wc-block-components-product-price, .wc-block-mini-cart__badge, .wc-block-mini-cart__quantity-badge, .wc-block-components-order-summary-item__quantity, .product-quantity, .wp-block-post-date, time, .woocommerce-order-overview__date, .woocommerce-orders-table__cell-order-date';
  const digits = text => text.replace(/([0-9۰-۹]),(?=[0-9۰-۹])/g, '$1٬').replace(/[0-9]/g, n => '۰۱۲۳۴۵۶۷۸۹'[n]);
  const update = () => {
   document.querySelectorAll(selectors).forEach(element => {

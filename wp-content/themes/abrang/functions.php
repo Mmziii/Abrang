@@ -86,5 +86,13 @@ function abrang_display_digits( $text ) {
     if ( is_admin() || ! is_string( $text ) ) { return $text; }
     return strtr( $text, array( '0'=>'۰', '1'=>'۱', '2'=>'۲', '3'=>'۳', '4'=>'۴', '5'=>'۵', '6'=>'۶', '7'=>'۷', '8'=>'۸', '9'=>'۹' ) );
 }
-add_filter( 'wp_date', 'abrang_display_digits' );
-add_filter( 'date_i18n', 'abrang_display_digits' );
+// Only block text, never wp_date/date_i18n globally: those also produce machine
+// dates in datetime attributes, REST responses and structured data.
+add_filter( 'render_block_core/post-date', static function ( $html ) {
+    $tokens = wp_html_split( $html );
+    foreach ( $tokens as &$token ) {
+        if ( '' !== $token && '<' !== $token[0] ) { $token = abrang_display_digits( $token ); }
+    }
+    unset( $token );
+    return implode( '', $tokens );
+} );

@@ -41,14 +41,14 @@ setTimeout(() => { console.error('::error::Browser test exceeded 180 seconds'); 
   const numericInput = await page.evaluate(async () => {
    const box = document.createElement('div');
    box.className = 'wc-block-components-product-price';
-   box.innerHTML = '<input type="number" value="12"><span data-value="123">123,000</span>';
+   box.innerHTML = '<input type="number" value="12"><span data-value="123">123,000</span><time datetime="2026-10-26">2026/10/26</time>';
    document.body.append(box);
    await new Promise(resolve => setTimeout(resolve, 100));
-   const result = {value:box.querySelector('input').value, attribute:box.querySelector('span').dataset.value, text:box.querySelector('span').textContent};
+   const result = {value:box.querySelector('input').value, attribute:box.querySelector('span').dataset.value, text:box.querySelector('span').textContent, dateAttribute:box.querySelector('time').getAttribute('datetime'), dateText:box.querySelector('time').textContent};
    box.remove();
    return result;
   });
-  assert.deepEqual(numericInput, {value:'12', attribute:'123', text:'۱۲۳٬۰۰۰'});
+  assert.deepEqual(numericInput, {value:'12', attribute:'123', text:'۱۲۳٬۰۰۰', dateAttribute:'2026-10-26', dateText:'۲۰۲۶/۱۰/۲۶'});
   const cardImages = page.locator('.abrang-products .abrang-product-image img');
   assert.ok(await cardImages.count() > 0, 'Product image wrappers rendered');
   for (const image of await cardImages.all()) {
