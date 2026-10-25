@@ -314,6 +314,7 @@ fi
 
 wp eval-file /scripts/categories.php
 wp eval-file /scripts/pages.php
+ensure_option show_on_front "posts"
 if [ "${ABRANG_DEMO:-0}" = "1" ]; then bash /scripts/demo.sh; fi
 
 log "Done ✔  Abrang is ready."

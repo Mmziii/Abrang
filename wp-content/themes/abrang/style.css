@@ -37,3 +37,14 @@ Tags: e-commerce, rtl-language-support, full-site-editing
 
 /* Footer placeholders deliberately contain no trust badges. */
 .abrang-footer {background:var(--wp--preset--color--mist);padding-block:48px;margin-top:64px}.abrang-footer h2{font-size:18px}.abrang-footer p{font-size:14px}.abrang-trust-badges{border:1px dashed var(--wp--preset--color--indigo);border-radius:10px;padding:16px}
+/* Lightweight wash, cards and responsive product grids; colors use tokens. */
+.abrang-hero {position:relative;isolation:isolate;padding:clamp(28px,6vw,80px);margin-block:24px 48px;border-radius:12px;background:var(--wp--preset--color--mist);overflow:hidden}
+.abrang-hero:before {content:"";position:absolute;inset:0;z-index:-1;background:var(--wp--preset--color--teal);opacity:.14;mask:url('assets/wash.svg') center/cover}
+.abrang-hero h1{font-size:clamp(28px,4vw,48px);max-width:750px}
+.abrang-tiles,.abrang-audiences,.abrang-features {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;margin-block:24px 56px}
+.abrang-card {display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px 12px;border-radius:12px;background:var(--wp--preset--color--mist);text-decoration:none;text-align:center}
+.abrang-audiences {grid-template-columns:repeat(3,minmax(0,1fr))}
+.abrang-features {grid-template-columns:repeat(4,minmax(0,1fr));text-align:center;color:var(--wp--preset--color--indigo)}
+.abrang-products .wc-block-product-template {display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:20px}
+.abrang-products img{border-radius:10px}.abrang-products li{min-width:0}.abrang-products{margin-block:24px 56px}
+@media(max-width:781px){.abrang-tiles,.abrang-features{grid-template-columns:repeat(2,minmax(0,1fr))}.abrang-audiences{grid-template-columns:1fr}.abrang-products .wc-block-product-template{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}.abrang-card{padding:18px 8px}}

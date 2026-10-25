@@ -39,3 +39,16 @@ function abrang_enqueue_styles() {
 	);
 }
 add_action( 'wp_enqueue_scripts', 'abrang_enqueue_styles' );
+
+/** Reusable storefront sections in the inserter. */
+add_action( 'init', static function () {
+    register_block_pattern_category( 'abrang', array( 'label' => 'آبرنگ' ) );
+} );
+
+/** Avoid an empty promotional section when no products are on sale. */
+add_filter( 'render_block_core/group', static function ( $content, $block ) {
+    if ( str_contains( $block['attrs']['className'] ?? '', 'abrang-sale' ) && function_exists( 'wc_get_product_ids_on_sale' ) && ! wc_get_product_ids_on_sale() ) {
+        return '';
+    }
+    return $content;
+}, 10, 2 );
