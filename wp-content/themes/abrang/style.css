@@ -23,3 +23,14 @@ Tags: e-commerce, rtl-language-support, full-site-editing
  * design in later prompts should prefer theme.json / block styles over
  * hand-written CSS.
  */
+
+/* Header: wrapping search and native accessible navigation overlay. */
+.abrang-header,.abrang-footer,main {padding-inline:clamp(16px,4vw,48px)}
+.abrang-announcement {background:var(--wp--preset--color--indigo);color:var(--wp--preset--color--paper);text-align:center;padding:6px 16px;font-size:14px}
+.abrang-announcement p {margin:0}
+.abrang-header-main {gap:16px;padding-block:20px}
+.abrang-header-main .wp-block-woocommerce-product-search {flex:1;min-width:140px}
+.abrang-header-main figure {margin:0}
+.abrang-header nav {padding-block:12px;border-top:1px solid var(--wp--preset--color--mist)}
+:focus-visible {outline:3px solid var(--wp--preset--color--indigo);outline-offset:4px}
+@media(max-width:781px){.abrang-header-main .wp-block-woocommerce-product-search{order:4;flex-basis:100%}.abrang-header-main .wp-block-woocommerce-customer-account{margin-inline-start:auto}}
