@@ -38,7 +38,7 @@ green before this prompt is finished.
   - Placeholder header (آبرنگ + navigation) & footer (copyright) parts, RTL-correct
   - Check: no PHP warnings, `dir="rtl"` + `lang="fa-IR"`, font from local path, `php -l` clean (via CI)
 
-- [ ] **Stage 5 — CI `.github/workflows/ci.yml`**
+- [x] **Stage 5 — CI `.github/workflows/ci.yml`** — `.github/workflows/ci.yml`. Check: GREEN on PR #1 on first run (run 40229688552, 2m13s) — fresh stack up, setup.sh ×2 (2nd run all `[already done]`), home 200 + `dir="rtl"` + `lang="fa-IR"`, Vazirmatn served from local theme path (no Google Fonts), /shop/ /cart/ /my-account/ 200, WP-CLI: theme abrang (parent twentytwentyfive), WPLANG fa_IR, both plugins active, currency IRT, 0 decimals, country IR, `/%postname%/`, default posts gone, `php -l` clean. This also completes the runtime checks of Stages 2–4.
   - .env from example → up → wait healthy → setup.sh ×2 → curl/WP-CLI smoke tests → php -l; logs on failure
   - Check: CI green on the PR
 
