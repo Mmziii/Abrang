@@ -48,8 +48,54 @@ green before this prompt is finished.
 
 ## Not done
 
-_(empty for now — anything impossible gets a dated reason here instead of being skipped silently)_
+Nothing from this prompt's scope is left undone. Two honest clarifications instead:
+
+- Vazirmatn woff2 files were taken from the official `rastikerdar/vazirmatn` GitHub repo
+  (`fonts/webfonts`, v33.003 line) via `git clone`, not from a GitHub *Release asset* file,
+  because release-asset download hosts are not reachable from the agent sandbox.
+  The files are the project's own published webfonts; `OFL.txt` is included next to them.
+- The agent sandbox has no Docker/PHP, so no runtime check could run locally.
+  All runtime checks (compose up, setup.sh ×2, php -l, RTL/font/shop smoke tests)
+  were executed by GitHub Actions CI — green (see Report). Local checks that did run:
+  `bash -n`, YAML/JSON parsing + structure assertions, `git check-ignore` proofs, woff2 magic bytes.
 
 ## Report
 
-_(added at the end of this prompt: what was built, how it was tested, known limitations, exact commands for the owner)_
+### What was built (Prompt 1/5 — infrastructure + theme skeleton)
+
+- **Repo skeleton:** `.gitignore` (core/uploads/dumps/.env/node_modules ignored; only our theme tracked under wp-content), `.gitattributes` forcing LF for sh/php/json/yml/css/html/md (+ binaries marked), `.env.example` (all variables, local-only placeholders).
+- **`docker-compose.yml`:** `db` = mariadb:11 (utf8mb4, named volume `db_data`, `healthcheck.sh` healthcheck); `wordpress` = wordpress:php8.3-apache on `${WP_PORT:-8080}`, `depends_on: service_healthy`, core+uploads in named volume `wp_data`, theme bind-mounted live from the repo; `wpcli` = wordpress:cli-php8.3, **user 33:33** (matches Apache www-data; the cli image's own www-data uid differs), behind profile `tools` (not started by `up`), sharing both volumes + `./scripts` mounted read-only at `/scripts`. All config via `.env` (missing passwords fail with a helpful message).
+- **`scripts/setup.sh`** (runs in wpcli, `set -euo pipefail`, check-before-act, `[already done]` logs): waits for core files + DB → creates wp-config only if missing → first install only: `wp core install` from .env + deletes Hello World/Sample Page/default comment (keeps Privacy page) → fa_IR install+activate → title/URL, Asia/Tehran, `j F Y` / `H:i`, week starts Saturday, `blog_public` from `WP_ALLOW_SEARCH_ENGINES` (default 0 = discouraged locally) → permalinks `/%postname%/` → installs+activates `woocommerce` then `persian-woocommerce` (latest stable from wordpress.org) + WooCommerce fa_IR pack (non-fatal) → WooCommerce: country IR, currency **IRT (تومان)**, 0 decimals, thousand separator `,` (per Persian WooCommerce docs/examples; e.g. «25,000 تومان»), decimal sep `.`, position `right_space`, onboarding skipped (`woocommerce_onboarding_profile` completed+skipped) → ensures shop/cart/checkout/my-account pages (Persian titles; cart/checkout use WooCommerce blocks) → ensures parent `twentytwentyfive`, activates `abrang` (hard-fails if theme not mounted) → rewrite flush only when something structural changed.
+- **Theme `wp-content/themes/abrang`** (child of twentytwentyfive): `style.css` (Text Domain: abrang), minimal `functions.php` (`load_child_theme_textdomain`, `add_theme_support('woocommerce')`, child stylesheet), `theme.json` v3 with the 7 brand tokens (paper/ink/indigo/coral/teal/ochre/mist — slugs stable), body/heading/link/button defaults, **self-hosted Vazirmatn woff2 400/500/700** in `assets/fonts/` (+ `OFL.txt`) registered via `fontFace`, placeholder `parts/header.html` (site title + navigation) and `parts/footer.html` (copyright), placeholder `screenshot.png`. No `templates/` — parent templates inherited, child parts override by slug. No external fonts/CDNs.
+- **CI `.github/workflows/ci.yml`** (push + PR): static checks (bash -n, theme.json parse, `php -l` on all theme PHP) → `.env` from example → compose up → wait HTTP → **setup.sh twice** (2nd run asserted all-`[already done]`) → HTTP smoke (home 200, `dir="rtl"`, `lang="fa-IR"`, Vazirmatn referenced + served locally, no Google Fonts, no Fatal error, /shop/ /cart/ /my-account/ 200) → WP-CLI smoke (theme abrang + parent, WPLANG fa_IR, both plugins active, IRT, 0 decimals, IR, `/%postname%/`, default posts = 0) → container logs dumped on failure, `down -v` always.
+- **Docs:** `README.md` — Persian, non-technical, exact PowerShell commands with expected results (prereqs → clone → .env → up → setup → site/wp-admin → stop/restart/update/full reset) + troubleshooting (Docker stopped, port 8080 busy → 8081 in .env, CRLF `$'\r'`, forgotten admin password). `docs/ARCHITECTURE.md` — what lives in git vs `wp_data`/`db_data` volumes vs `.env`, and why.
+
+### How it was tested
+
+- **CI green on PR #1**: run `40229688552` (push, 2m13s) and `40229689571` (pull_request, 1m44s), Oct 25 2026 — full fresh-stack build incl. plugin downloads from wordpress.org, setup.sh ×2, all smoke assertions above.
+- Locally in the sandbox: `git check-ignore` proof with dummy core/upload/dump files; YAML+JSON parse with structure/palette/font-wiring assertions; `bash -n` + LF-only check on setup.sh; woff2 magic bytes; block-comment balance; screenshot visual check.
+- Verified against upstream sources before writing code: official `wordpress:cli` image ships bash and passes `bash`/`wp` through its entrypoint, but its www-data uid ≠ 33 (hence `user: "33:33"`); `persian-woocommerce` on wordpress.org is maintained (v10.x in 2026) and provides IRT.
+
+### Known limitations
+
+- Floating image tags (`wordpress:php8.3-apache`, `mariadb:11`, latest plugins) — a future upstream major could require setup.sh tweaks; CI on every PR will catch it. (Pinning can be revisited in the deployment prompt.)
+- `woocommerce_price_thousand_sep=","` renders «25,000 تومان». If the design prompt prefers the Persian separator «٬», it's a one-line change in setup.sh + existing stores keep the old value until setup re-runs (by design, it will update it).
+- Updating `.env` passwords after first install does NOT change the already-created DB/admin credentials (WordPress/MariaDB keep the originals in the volumes) — documented in README; full reset re-creates from `.env`.
+- The theme is a skeleton: it inherits Twenty Twenty-Five's templates/look (with our palette + Vazirmatn + header/footer parts). Real design, products, payment, shipping, SEO, deployment = prompts 2–5.
+- Local-only: `http://localhost:8080`, search engines discouraged by default, placeholder passwords — production hardening belongs to the deployment prompt.
+
+### Exact commands for the owner (PowerShell)
+
+Prereqs: install Docker Desktop + Git, open Docker Desktop until "Engine running".
+
+```powershell
+git clone https://github.com/Mmziii/Abrang.git
+cd Abrang
+Copy-Item .env.example .env
+docker compose up -d
+docker compose run --rm wpcli bash /scripts/setup.sh
+```
+
+Then open http://localhost:8080 and http://localhost:8080/wp-admin (user `admin`, password `abrang-admin-1234`).
+Stop with `docker compose down`; full reset with `docker compose down -v` then the last two commands again.
+Full step-by-step with expected results: see README.md.
