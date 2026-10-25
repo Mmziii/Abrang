@@ -1,0 +1,51 @@
+# =============================================================================
+# Abrang — .gitignore
+# Rule of thumb: git holds everything needed to REBUILD the site
+# (Docker setup, provisioning script, custom theme).
+# The database, uploads and secrets are NEVER committed.
+# =============================================================================
+
+# --- Secrets -----------------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# --- WordPress core (lives in the Docker named volume, not in this repo) ----
+/wp-admin/
+/wp-includes/
+/wp-*.php
+/index.php
+/license.txt
+/readme.html
+/xmlrpc.php
+/.htaccess
+
+# --- wp-content: ignore everything EXCEPT our own theme ---------------------
+/wp-content/*
+!/wp-content/themes/
+/wp-content/themes/*
+!/wp-content/themes/abrang/
+# (uploads, plugins, other themes, upgrade/, cache/ ... are all ignored above)
+
+# --- Database dumps & backups -------------------------------------------------
+*.sql
+*.sql.gz
+*.dump
+/backups/
+
+# --- Dependencies / build output ----------------------------------------------
+node_modules/
+vendor/
+
+# --- Logs & temp ---------------------------------------------------------------
+*.log
+*.tmp
+*~
+
+# --- OS & editor junk ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
