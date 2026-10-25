@@ -174,7 +174,7 @@ All seven item groups committed on the same branch/PR #2. Added browser checks f
 loaded/computed Vazirmatn, opaque viewport menu and inert hero, collapsed/expanded
 accordion, one mobile header row and full-width search, square product images,
 Persian price text and untouched numeric input values/attributes, card button overflow.
-First full review CI verified mobile (font, menu, digits, geometry), then caught desktop overflow in the new full-width trust band. Diagnostics traced the 24px overflow to inherited WordPress global padding versus the custom gutter. Trust band now uses a centered viewport-width bleed independent of padding; overflow diagnostics retained. Final rerun pending below.
+First full review CI verified mobile (font, menu, digits, geometry), then caught desktop overflow in the new full-width trust band. Diagnostics traced the 24px overflow to inherited WordPress global padding versus the custom gutter. Trust band now uses a centered viewport-width bleed independent of padding; overflow diagnostics retained. Verified PR CI 40241275296 GREEN (3m23s): all previous and new browser assertions passed; regenerated screenshots artifact includes home-390.png, home-1440.png and mobile-menu-open.png.
 
 Existing local demo images can be refreshed (only marked demo products/media are deleted):
 ```powershell
@@ -183,3 +183,15 @@ docker compose run --rm wpcli bash /scripts/demo-remove.sh
 docker compose run --rm -e ABRANG_DEMO=1 wpcli bash /scripts/setup.sh
 ```
 Do not run demo generation on production. Site Editor overrides still require reset.
+
+
+## Prompt 2 — fixes report
+
+- Font token is lowercase throughout; all home headings/buttons/body report Vazirmatn and the font is loaded.
+- Mobile navigation is an opaque paper viewport modal, locks background scroll, makes home/footer inert and provides collapsed keyboard-accessible accordions; native focus trap/Escape remain intact.
+- Mobile header has one hamburger/wordmark/account/cart row and full-width search below. Search keeps its accessible label and uses a magnifier and Persian placeholder; wordmark is live Vazirmatn text over a subtle wash.
+- Shared collection cards have white rounded surfaces, square product illustrations (five original 800px PNGs), two-line titles, aligned bottom buttons, price hierarchy and sale/stock pills. Indigo/paper button contrast 8.13:1; ink/coral sale pill 4.81:1; muted price/white 5.78:1.
+- Native Persian WooCommerce price setting and Persian separator are idempotently configured. Scoped display-only text conversion covers dynamic prices/counts and dates; browser tests prove numeric field values/attributes stay unchanged.
+- Audience/trust icons are distinct backpack/palette/briefcase and truck/shield-check/lock/headset SVGs. Section spacing uses 64/40px presets, a separate mist trust band, hover/focus states and reduced-motion support.
+- CI 40241275296 passed including all prior smoke/lifecycle checks and new computed-font, modal/accordion, geometry, square-image, digit/input-safety and overflow assertions. Three refreshed screenshots uploaded as `screenshots`. Agent cannot manually inspect artifact images because the sandbox blocks the artifact storage host; owner review remains available in PR #2 → Checks → CI → Artifacts.
+- No branch/PR changes, no production configuration or later-prompt work. Owner applies the PowerShell commands above after merging; resetting Site Editor overrides may be necessary.
