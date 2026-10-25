@@ -1,10 +1,12 @@
-"""Original CC0 product-like fixtures. Optional tooling: pillow, fonttools, brotli.
+"""Original CC0 product-like fixtures. Optional tooling: pillow, fonttools, brotli, arabic-reshaper, python-bidi.
 Run from repository root; production/demo.sh needs none of these dependencies.
 """
 from io import BytesIO
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from fontTools.ttLib import TTFont
+import arabic_reshaper
+from bidi.algorithm import get_display
 
 font = TTFont('wp-content/themes/abrang/assets/fonts/Vazirmatn-Regular.woff2')
 font.flavor = None
@@ -49,5 +51,5 @@ for i in range(5):
         for y in range(290, 460, 40): d.line((245,y,545,y),fill=mist,width=7)
         d.polygon([(170,370),(635,370),(610,600),(195,600)], fill=teal)
         d.ellipse((385,390,415,420),fill=ochre)
-    d.text((400, 730), 'نمونهٔ آزمایشی', font=label_font, anchor='mm', fill=ink, direction='rtl')
+    d.text((400, 730), get_display(arabic_reshaper.reshape('نمونهٔ آزمایشی')), font=label_font, anchor='mm', fill=ink)
     im.save(Path(__file__).parent / 'images' / f'{i}.png', optimize=True)
