@@ -276,19 +276,23 @@ jobs:
           mkdir -p import
           cp docs/products-template.csv import/template.csv
           cp docs/products-template.xlsx import/template.xlsx
-          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv
+          echo "--- Import template.csv (1st) ---"
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv || { echo "::error::import template.csv 1st failed"; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | head -n 100; exit 1; }
           COUNT=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r')
           echo "Total products after first import: $COUNT"
-          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv
+          echo "--- Import template.csv (2nd, idempotency) ---"
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv || { echo "::error::import template.csv 2nd failed"; exit 1; }
           COUNT2=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r')
           echo "After second import: $COUNT2"
-          [ "$COUNT" = "$COUNT2" ]
+          [ "$COUNT" = "$COUNT2" ] || { echo "::error::idempotency failed COUNT=$COUNT COUNT2=$COUNT2"; exit 1; }
           for sku in ABR-001 ABR-002 ABR-003; do
             id=$(docker compose run --rm wpcli wp eval "echo wc_get_product_id_by_sku('$sku');" | tr -d '\r' | tail -n 1)
             echo "SKU $sku -> ID $id"
-            [ "$id" != "0" ] && [ -n "$id" ]
+            [ "$id" != "0" ] && [ -n "$id" ] || { echo "::error::SKU $sku not found id=$id"; docker compose run --rm wpcli wp post list --post_type=product --fields=post_name,post_status | head -n 20; exit 1; }
           done
-          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.xlsx --dry-run | grep -q "بررسی آزمایشی"
+          echo "--- Dry-run XLSX ---"
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.xlsx --dry-run | tee /tmp/dryrun.log
+          grep -q "بررسی آزمایشی" /tmp/dryrun.log || { echo "::error::dry-run should contain بررسی آزمایشی"; cat /tmp/dryrun.log | head -n 50; exit 1; }
           cat > import/broken.csv <<'CSV'
           sku,name,category_slug,regular_price,sale_price,stock_qty,short_description,description,brand,color,size,material,pack_size,weight_grams,tags,status
           ABR-001,تست تکراری,pens,50000,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
@@ -297,6 +301,7 @@ jobs:
           ABR-004,قیمت نامعتبر,pens,not-a-number,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
           ABR-005,حراج نامعتبر,pens,50000,60000,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
           CSV
+          echo "--- Test broken CSV should fail ---"
           if docker compose run --rm wpcli bash /scripts/import-products.sh /import/broken.csv; then
             echo "::error::Broken CSV should have failed"
             exit 1
@@ -305,8 +310,9 @@ jobs:
           fi
           BROKEN_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("ABR-999");' | tr -d '\r' | tail -n 1)
           echo "ABR-999 after broken import: $BROKEN_ID (should be 0)"
-          [ "$BROKEN_ID" = "0" ]
-          docker compose run --rm wpcli bash /scripts/import-products.sh /import/broken.csv --skip-invalid || true
+          [ "$BROKEN_ID" = "0" ] || { echo "::error::ABR-999 should be 0 after failed import, got $BROKEN_ID"; exit 1; }
+          echo "--- Test --skip-invalid ---"
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/broken.csv --skip-invalid || { echo "::error::--skip-invalid should not fail"; exit 1; }
           mkdir -p import/images-test
           cp scripts/demo/images/pen.png import/images-test/ABR-001.jpg
           cp scripts/demo/images/pencil.png import/images-test/ABR-001-2.jpg
