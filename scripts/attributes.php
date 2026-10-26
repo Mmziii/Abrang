@@ -28,10 +28,9 @@ foreach ( $abrang_attributes as $slug => $label ) {
         if ( $attr && $attr->has_archives ) {
             $updated = wc_update_attribute( $existing_id, array( 'has_archives' => false ) );
             if ( is_wp_error( $updated ) ) {
-                WP_CLI::warning( "Attribute $slug update: " . $updated->get_error_message() );
-            } else {
-                WP_CLI::log( "Updated attribute $slug (disabled archives)" );
+                WP_CLI::error( $updated );
             }
+            WP_CLI::log( "Updated attribute $slug (disabled archives)" );
         } else {
             WP_CLI::log( "[already done] attribute $slug" );
         }
@@ -45,13 +44,7 @@ foreach ( $abrang_attributes as $slug => $label ) {
         'has_archives' => false,
     ) );
     if ( is_wp_error( $result ) ) {
-        // If creation fails because it already exists (race), treat as done.
-        if ( in_array( $result->get_error_code(), array( 'invalid_product_attribute_slug_already_exists', 'term_exists' ), true ) ) {
-            WP_CLI::log( "[already done] attribute $slug" );
-            continue;
-        }
-        WP_CLI::warning( "Attribute $slug: " . $result->get_error_message() );
-        continue;
+        WP_CLI::error( $result );
     }
     WP_CLI::log( "Created attribute $slug" );
 }
@@ -87,8 +80,7 @@ foreach ( $abrang_color_terms as $slug => $name ) {
             WP_CLI::log( "[already done] color term $slug" );
             continue;
         }
-        WP_CLI::warning( "Color term $slug: " . $result->get_error_message() );
-        continue;
+        WP_CLI::error( $result );
     }
     update_term_meta( $result['term_id'], '_abrang_demo', 1 );
     WP_CLI::log( "Created color term $slug" );

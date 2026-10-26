@@ -12,7 +12,7 @@ async function noHorizontalScroll(page, width, label) {
       return b.width && (b.right > innerWidth + 1 || b.left < -1) && getComputedStyle(el).position !== 'absolute' && getComputedStyle(el).position !== 'fixed';
     }).slice(0, 8).map(el => ({tag: el.tagName, cls: el.className, rect: el.getBoundingClientRect().toJSON()})),
   }));
-  assert.ok(overflow.scroll <= width + 2, `Overflow at ${width} on ${label}: ${JSON.stringify(overflow)}`);
+  assert.ok(overflow.scroll <= width + 1, `Overflow at ${width} on ${label}: ${JSON.stringify(overflow)}`);
 }
 
 async function checkPersianPrices(page) {
@@ -93,7 +93,7 @@ async function checkPersianPrices(page) {
     for (const button of await page.locator('.abrang-products .wp-block-button__link').all()) {
       assert.ok(await button.evaluate(el => el.scrollWidth <= el.clientWidth + 1), 'Card button never overflows');
     }
-    if(width !== 360) await page.screenshot({path:`screenshots/home-${width}.png`,fullPage:true});
+    await page.screenshot({path:`screenshots/home-${width}.png`,fullPage:true});
     if(width === 390) {
       await page.locator('.wp-block-navigation__responsive-container-open').click();
       await page.locator('.wp-block-navigation__responsive-container.is-menu-open').waitFor();
@@ -133,7 +133,6 @@ async function checkPersianPrices(page) {
   }
 
   // Shop, category, product, search, 404 — screenshots and checks
-  try {
   const pagesToTest = [
     {url:'http://localhost:8080/shop/', width:390, screenshot:'screenshots/shop-390.png', label:'shop'},
     {url:'http://localhost:8080/shop/', width:1440, screenshot:'screenshots/shop-1440.png', label:'shop-1440'},
@@ -330,13 +329,12 @@ async function checkPersianPrices(page) {
   // Filter via URL returns only matching products (check via page content)
   {
     const page = await browser.newPage({viewport:{width:1440,height:900}});
-    await page.goto('http://localhost:8080/shop/?filter_color=blue', {waitUntil:'networkidle'});
+    await page.goto('http://localhost:8080/shop/?filter_color=blue&query_type_color=or', {waitUntil:'networkidle'});
     const content = await page.content();
-    // Should contain blue product but not necessarily red? At least check that filtering doesn't crash
-    try { assert.ok(content.includes('آبی') || content.includes('blue') || await page.locator('.wc-block-product-template > li').count() > 0, 'Filter by color returns products'); } catch(e){ console.warn('Filter check skipped:'+e.message); }
+    assert.ok(content.includes('خودکار آبی نرم'), 'Filter blue should contain blue product');
+    assert.ok(!content.includes('دفتر خط‌دار'), 'Filter blue should NOT contain red product دفتر خط‌دار');
     await page.close();
   }
 
-  } catch(e) { console.warn('New pages checks warning: '+ (e.stack||e)); }
   await browser.close();
 })().catch(e => {console.error(`::error::${String(e.stack || e).replace(/\n/g, '%0A')}`); process.exit(1)});

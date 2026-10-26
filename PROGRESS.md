@@ -336,3 +336,33 @@ docker compose run --rm wpcli bash /scripts/import-images.sh /import/images.zip
 ```
 
 پس از هر `git pull` آینده، `docker compose run --rm wpcli bash /scripts/setup.sh` را بزنید تا ویژگی‌ها/دسته‌ها/برگه‌ها به‌روز شوند. برای دیدن اسکرین‌شات‌های این قدم پس از سبز شدن CI: PR → Checks → CI → Artifacts → `screenshots`.
+## Prompt 3 — real fixes (CI was green only because tests were disabled)
+
+Review of PR #3 found that CI was green only because failing checks were softened into warnings (`::warning::`, `set +e`, `|| true`, `try/catch`). A green CI must mean the features work. This section restores strictness and fixes root causes on the same branch/PR.
+
+### Fix A — Restore every check (strict CI)
+
+- [x] CI `.github/workflows/ci.yml` restored to at least as strict as `8f58deb` (keep `bdc8416` YAML `\r` fix): `set -euo pipefail` everywhere, `[ "$code" = "200" ]` / `[ "$code" = "404" ]` hard asserts, broken-CSV-must-fail (`exit 1`), exact variation count `4`, search must find «خودکار» (`grep -q` or exit 1), image/gallery idempotency hard asserts, `debug.log` check `exit 1` on `Notice|Warning|Fatal`.
+- [x] Two already-weak checks made strict: `404.html` must contain `یافت نشد` (hard `grep -q` without `|| echo`), and `?filter_color=blue&query_type_color=or` must return the blue product (`خودکار آبی نرم`) and **not** the red product (`دفتر خط‌دار`) — asserted on HTML product names.
+- [x] Provisioning `scripts/attributes.php` and `scripts/demo/products.php` restored to `WP_CLI::error` on real failures; only genuine `already exists` / `term_exists` treated as `[already done]`; never `update_post_meta` on `WP_Error`.
+- [x] `tests/storefront.cjs` restored: overflow `+1` (not `+2`), removed `try/catch` wrappers around new pages checks, filter assert is hard `assert.ok` (not warning).
+- [x] Run CI after this revert — expected to be **red**; real bugs are recorded under Fix B "Not done" below and in CI logs.
+
+### Fix B — Root causes
+
+Status after Fix A CI run (record here after first strict run):
+
+- [ ] Attributes: after `wc_create_attribute()` the `pa_*` taxonomy not registered in same request → `wp_insert_term`/`wp_set_object_terms`/variations fail (`invalid taxonomy`). Fix: register taxonomy immediately after creation (or `wc_register_attribute_taxonomies()` after loop — already in `8f58deb` but verify single-request idempotency). Use `wc_attribute_taxonomy_id_by_name()` for lookup.
+- [ ] Variable product `DEMO-VAR-1`: parent attributes via `WC_Product_Attribute` with `id = attribute id`, `options = term IDs` (or slugs), `variation = true`, `visible = true`; save parent; create each `WC_Product_Variation` with `set_attributes(['pa_color' => 'blue'])`, stock/image; finally `WC_Product_Variable::sync($id)`. Assert 4 children.
+- [ ] Search: `?s=خودکار&post_type=product` must find demo pens; check Arabic `ي/ك` → `ی/ک` normalization does not break query and `product-search-results` template runs the main query.
+- [ ] Color filter: use URL the `woocommerce/product-filter` block actually reads (`filter_color=blue&query_type_color=or`); test that exact URL and assert on names as above.
+- [ ] Import: `broken.csv` must `exit 1` with row-numbered Persian errors and zero products created; valid template import idempotent (`COUNT == COUNT2`); image import attaches main + gallery exactly once (`MAIN`/`GALLERY` idempotent).
+
+Each root cause fix committed separately with explanation.
+
+### Fix C — Proof
+
+- [ ] Final CI green with **all** restored checks; CI log for Prompt 3 steps contains **zero** `::warning::` lines (final step greps and fails if any appear).
+- [ ] Fresh `screenshots` artifact with all 13 screenshots actually produced (CI fails if any expected PNG missing).
+- [ ] Report in chat: for each restored check PASS/FAIL and for each root cause what was wrong and how fixed.
+
