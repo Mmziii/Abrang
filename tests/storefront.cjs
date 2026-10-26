@@ -337,15 +337,34 @@ async function checkPersianPrices(page) {
     let count = await page.locator('.wc-block-product-template > li').count();
     console.log('filter debug: hasBlue='+hasBlue+' hasRed='+hasRed+' count='+count);
     await page.screenshot({path:'screenshots/filter-blue-1440.png', fullPage:true});
-    // Fallback to filter_pa_color if first fails (handles both WC Query and ProductQuery variants)
-    if (!hasBlue) {
+    // If filter_color did not filter (hasRed true or count==13), try filter_pa_color fallback (WC_Query layered nav)
+    if (hasRed || !hasBlue || count === 13) {
       await page.goto('http://localhost:8080/shop/?filter_pa_color=blue&query_type_color=or', {waitUntil:'networkidle'});
-      content = await page.content();
-      hasBlue = content.includes('خودکار آبی نرم');
-      hasRed = content.includes('دفتر خط‌دار');
-      count = await page.locator('.wc-block-product-template > li').count();
-      console.log('filter_pa_color debug: hasBlue='+hasBlue+' hasRed='+hasRed+' count='+count);
+      const content2 = await page.content();
+      const hasBlue2 = content2.includes('خودکار آبی نرم');
+      const hasRed2 = content2.includes('دفتر خط‌دار');
+      const count2 = await page.locator('.wc-block-product-template > li').count();
+      console.log('filter_pa_color debug: hasBlue='+hasBlue2+' hasRed='+hasRed2+' count='+count2);
       await page.screenshot({path:'screenshots/filter-pa-blue-1440.png', fullPage:true});
+      // Use the better result: if fallback correctly filters, use it
+      if (hasBlue2 && !hasRed2 && count2 < 13) {
+        content = content2; hasBlue = hasBlue2; hasRed = hasRed2; count = count2;
+      } else if (!hasBlue && hasBlue2) {
+        // fallback has blue but primary didn't, use fallback
+        content = content2; hasBlue = hasBlue2; hasRed = hasRed2; count = count2;
+      }
+    }
+    // Also try without query_type (default OR) as last resort
+    if (!hasBlue || hasRed) {
+      await page.goto('http://localhost:8080/shop/?filter_color=blue', {waitUntil:'networkidle'});
+      const content3 = await page.content();
+      const hasBlue3 = content3.includes('خودکار آبی نرم');
+      const hasRed3 = content3.includes('دفتر خط‌دار');
+      const count3 = await page.locator('.wc-block-product-template > li').count();
+      console.log('filter_color no query_type debug: hasBlue='+hasBlue3+' hasRed='+hasRed3+' count='+count3);
+      if (hasBlue3 && !hasRed3) {
+        content = content3; hasBlue = hasBlue3; hasRed = hasRed3; count = count3;
+      }
     }
     if (!hasBlue || hasRed) {
       require('node:fs').writeFileSync('screenshots/filter-debug.html', content.slice(0,8000));

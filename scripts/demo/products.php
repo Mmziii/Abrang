@@ -51,6 +51,28 @@ $abrang_brand_slug = $abrang_ensure_demo_term( 'pa_brand', 'abrang-demo', 'بر�
 $abrang_ensure_demo_term( 'pa_size', 'medium', 'متوسط' );
 $abrang_ensure_demo_term( 'pa_material', 'paper', 'کاغذ' );
 $abrang_ensure_demo_term( 'pa_pack-size', '1', '۱ عدد' );
+// Ensure color terms exist (idempotent) — used for filtering.
+$abrang_ensure_demo_term( 'pa_color', 'blue', 'آبی' );
+$abrang_ensure_demo_term( 'pa_color', 'black', 'مشکی' );
+$abrang_ensure_demo_term( 'pa_color', 'red', 'قرمز' );
+$abrang_ensure_demo_term( 'pa_color', 'green', 'سبز' );
+
+// Helper to ensure attribute taxonomy is registered before wc_attribute_taxonomy_id_by_name.
+$abrang_ensure_taxonomy = static function ( $attr ) {
+    $tax = 'pa_' . $attr;
+    if ( taxonomy_exists( $tax ) ) { return; }
+    delete_transient( 'wc_attribute_taxonomies' );
+    if ( class_exists( 'WC_Cache_Helper' ) ) {
+        WC_Cache_Helper::invalidate_cache_group( 'woocommerce-attributes' );
+    }
+    if ( function_exists( 'wc_register_attribute_taxonomies' ) ) {
+        wc_register_attribute_taxonomies();
+    }
+    if ( ! taxonomy_exists( $tax ) && function_exists( 'register_taxonomy' ) ) {
+        // Fallback: register as simple taxonomy so term assignment works.
+        register_taxonomy( $tax, array( 'product' ), array( 'hierarchical' => false, 'public' => false ) );
+    }
+};
 
 $names = array( 'خودکار آبی نرم', 'مداد نوکی ساده', 'دفتر خط‌دار', 'برنامه‌ریز هفتگی', 'کاغذ طراحی', 'آبرنگ دوازده رنگ', 'قلم‌مو گرد', 'جامدادی پارچه‌ای', 'ست هندسه', 'منگنه رومیزی', 'پوشه دکمه‌دار', 'چسب کاغذی' );
 $cats  = array( 'pens','pencils','notebooks','planners','paper-sheets','watercolor-gouache','brushes-canvas','bags-cases','geometry','staplers','folders','glue-scissors' );
@@ -102,6 +124,12 @@ foreach ( $names as $i => $name ) {
     // Demo attributes — visible on the product page, not used for variations.
     $color_slug = $color_slugs[ $i % 4 ];
     $attrs = array();
+    // Ensure taxonomies are registered for wc_attribute_taxonomy_id_by_name.
+    $abrang_ensure_taxonomy( 'brand' );
+    $abrang_ensure_taxonomy( 'color' );
+    $abrang_ensure_taxonomy( 'size' );
+    $abrang_ensure_taxonomy( 'material' );
+    $abrang_ensure_taxonomy( 'pack-size' );
     // Brand (taxonomy)
     $a = new WC_Product_Attribute();
     $a->set_id( wc_attribute_taxonomy_id_by_name( 'brand' ) );
@@ -213,6 +241,9 @@ if ( $existing_var_id ) {
     if ( $tag && ! is_wp_error( $tag ) ) {
         $variable->set_tag_ids( array( (int) $tag->term_id ) );
     }
+    // Ensure color/brand taxonomies are registered for variable.
+    $abrang_ensure_taxonomy( 'color' );
+    $abrang_ensure_taxonomy( 'brand' );
     // Attribute: pa_color with all four options, used for variations.
     // Use term IDs for parent options as recommended (variation = true).
     $color_term_ids = array();
