@@ -49,4 +49,4 @@ if [ -z "$resolved" ]; then
 fi
 
 # Pass through any extra flags (--dry-run, --skip-invalid) to the PHP importer.
-wp eval-file /scripts/import-products.php "$resolved" "$@"
+wp eval-file /scripts/import-products.php -- "$resolved" "$@"
