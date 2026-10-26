@@ -178,6 +178,15 @@ foreach ( $names as $i => $name ) {
 
     $product->set_attributes( $attrs );
     $product->update_meta_data( '_abrang_demo', 1 );
+    // Ensure pa_color term is directly assigned (fallback if attribute API didn't set it).
+    // This guarantees filtering via ?filter_color=blue works even if WC attribute handling is strict.
+    $saved_id = $product->get_id() ? $product->get_id() : 0;
+    // We will set after save; for new products save first to get ID, then set terms.
+    // For existing products, set now if we have an ID.
+    if ( $saved_id ) {
+        wp_set_object_terms( $saved_id, $color_slug, 'pa_color', false );
+        wp_set_object_terms( $saved_id, $abrang_brand_slug, 'pa_brand', false );
+    }
 
     // Tags for the demo — a single shared tag so tag archives can be verified.
     $tag = get_term_by( 'slug', 'demo-tag', 'product_tag' );
@@ -193,6 +202,9 @@ foreach ( $names as $i => $name ) {
     }
 
     $id = $product->save();
+    // Direct term assignment after save to guarantee filtering (covers new products where ID was 0 before).
+    wp_set_object_terms( $id, $color_slug, 'pa_color', false );
+    wp_set_object_terms( $id, $abrang_brand_slug, 'pa_brand', false );
 
     if ( $is_new ) {
         $file = wp_tempnam( 'demo.png' );
@@ -276,6 +288,9 @@ if ( $existing_var_id ) {
     $variable->set_attributes( array( $attr, $attr2 ) );
 
     $variable_id = $variable->save();
+    // Direct term assignment for variable parent to guarantee filtering.
+    wp_set_object_terms( $variable_id, array_keys( $var_colors ), 'pa_color', false );
+    wp_set_object_terms( $variable_id, $abrang_brand_slug, 'pa_brand', false );
 
     // Parent image.
     $file = wp_tempnam( 'demo.png' );

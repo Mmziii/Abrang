@@ -354,7 +354,7 @@ async function checkPersianPrices(page) {
         content = content2; hasBlue = hasBlue2; hasRed = hasRed2; count = count2;
       }
     }
-    // Also try without query_type (default OR) as last resort
+    // Also try without query_type (default OR) and with filtering=1 as last resorts
     if (!hasBlue || hasRed) {
       await page.goto('http://localhost:8080/shop/?filter_color=blue', {waitUntil:'networkidle'});
       const content3 = await page.content();
@@ -364,6 +364,17 @@ async function checkPersianPrices(page) {
       console.log('filter_color no query_type debug: hasBlue='+hasBlue3+' hasRed='+hasRed3+' count='+count3);
       if (hasBlue3 && !hasRed3) {
         content = content3; hasBlue = hasBlue3; hasRed = hasRed3; count = count3;
+      }
+    }
+    if (!hasBlue || hasRed) {
+      await page.goto('http://localhost:8080/shop/?filtering=1&filter_color=blue&query_type_color=or', {waitUntil:'networkidle'});
+      const content4 = await page.content();
+      const hasBlue4 = content4.includes('خودکار آبی نرم');
+      const hasRed4 = content4.includes('دفتر خط‌دار');
+      const count4 = await page.locator('.wc-block-product-template > li').count();
+      console.log('filtering=1 debug: hasBlue='+hasBlue4+' hasRed='+hasRed4+' count='+count4);
+      if (hasBlue4 && !hasRed4) {
+        content = content4; hasBlue = hasBlue4; hasRed = hasRed4; count = count4;
       }
     }
     if (!hasBlue || hasRed) {
