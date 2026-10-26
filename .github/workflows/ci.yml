@@ -320,14 +320,14 @@ jobs:
           cp scripts/demo/images/brush.png import/images-test/ABR-003.jpg
           cp scripts/demo/images/brush.png import/images-test/ABR-003-2.jpg
           cp scripts/demo/images/pen.png import/images-test/UNKNOWN-SKU.jpg
-          docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test
+          docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test || { echo "::error::import-images.sh failed"; exit 1; }
           ABR1_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("ABR-001");' | tr -d '\r' | tail -n 1)
           MAIN=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '\r' | tail -n 1)
           echo "ABR-001 main image: $MAIN"
-          [ "$MAIN" != "0" ] && [ -n "$MAIN" ]
+          [ "$MAIN" != "0" ] && [ -n "$MAIN" ] || { echo "::error::ABR-001 main image should be set, got $MAIN"; exit 1; }
           GALLERY=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '\r' | tail -n 1)
           echo "ABR-001 gallery count: $GALLERY"
-          [ "$GALLERY" = "1" ]
+          [ "$GALLERY" = "1" ] || { echo "::error::ABR-001 gallery should be 1, got $GALLERY"; exit 1; }
           docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test
           MAIN2=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '\r' | tail -n 1)
           GALLERY2=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '\r' | tail -n 1)
