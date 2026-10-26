@@ -24,7 +24,8 @@ $abrang_ensure_demo_term = static function ( $taxonomy, $slug, $name ) {
         if ( 'term_exists' === $result->get_error_code() ) {
             return $slug;
         }
-        WP_CLI::error( $result );
+        WP_CLI::warning( $result->get_error_message() );
+        return $slug;
     }
     update_term_meta( $result['term_id'], '_abrang_demo', 1 );
     return $slug;
@@ -155,7 +156,7 @@ foreach ( $names as $i => $name ) {
         $file = wp_tempnam( 'demo.png' );
         copy( __DIR__ . '/images/' . $images[ $i ] . '.png', $file );
         $attachment = media_handle_sideload( array( 'name'=>"$sku.png", 'tmp_name'=>$file ), $id, 'تصویر نمونه آزمایشی' );
-        if ( is_wp_error( $attachment ) ) { WP_CLI::error( $attachment ); }
+        if ( is_wp_error( $attachment ) ) { WP_CLI::warning( $attachment->get_error_message() ); }
         update_post_meta( $attachment, '_abrang_demo', 1 );
         update_post_meta( $attachment, '_wp_attachment_image_alt', 'تصویر آزمایشی ' . $name );
         $product->set_image_id( $attachment );
