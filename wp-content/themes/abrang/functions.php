@@ -221,16 +221,38 @@ add_filter( 'woocommerce_get_availability', static function ( $availability, $pr
 
 /** Search normalization — Arabic ي/ك → Persian ی/ک for query and display, no DB changes. */
 add_action( 'pre_get_posts', static function ( $query ) {
-    if ( is_admin() || ! $query->is_search() ) {
+    if ( is_admin() ) {
         return;
     }
-    $s = $query->get( 's' );
-    if ( is_string( $s ) && '' !== $s ) {
-        $normalized = strtr( $s, array( 'ي' => 'ی', 'ك' => 'ک' ) );
-        if ( $normalized !== $s ) {
-            $query->set( 's', $normalized );
+    foreach ( array( 's', 'search' ) as $key ) {
+        $val = $query->get( $key );
+        if ( is_string( $val ) && '' !== $val ) {
+            $norm = strtr( $val, array( 'ي' => 'ی', 'ك' => 'ک' ) );
+            if ( $norm !== $val ) {
+                $query->set( $key, $norm );
+            }
         }
     }
+} );
+add_action( 'init', static function () {
+    foreach ( array( 's', 'search' ) as $key ) {
+        if ( isset( $_GET[ $key ] ) && is_string( $_GET[ $key ] ) && '' !== $_GET[ $key ] ) {
+            $norm = strtr( $_GET[ $key ], array( 'ي' => 'ی', 'ك' => 'ک' ) );
+            if ( $norm !== $_GET[ $key ] ) {
+                $_GET[ $key ] = $norm;
+                $_REQUEST[ $key ] = $norm;
+            }
+        }
+    }
+} );
+add_filter( 'request', static function ( $vars ) {
+    if ( isset( $vars['s'] ) && is_string( $vars['s'] ) && '' !== $vars['s'] ) {
+        $vars['s'] = strtr( $vars['s'], array( 'ي' => 'ی', 'ك' => 'ک' ) );
+    }
+    if ( isset( $vars['search'] ) && is_string( $vars['search'] ) && '' !== $vars['search'] ) {
+        $vars['search'] = strtr( $vars['search'], array( 'ي' => 'ی', 'ك' => 'ک' ) );
+    }
+    return $vars;
 } );
 add_filter( 'get_search_query', static function ( $query ) {
     if ( is_admin() || ! is_string( $query ) ) {
