@@ -208,8 +208,8 @@ jobs:
           for path in /shop/ /product-category/writing/ /product-category/pens/; do
             code=$(curl -s -o /tmp/page.html -w '%{http_code}' "http://localhost:8080${path}")
             echo "${path} -> ${code}"
-            [ "$code" = "200" ]
-            if grep -qi 'Fatal error' /tmp/page.html; then echo "Fatal error on ${path}"; exit 1; fi
+            [ "$code" = "200" ] || { echo "::error::${path} expected 200 got $code"; cat /tmp/page.html | head -n 100; exit 1; }
+            if grep -qi 'Fatal error' /tmp/page.html; then echo "::error::Fatal error on ${path}"; cat /tmp/page.html | head -n 100; exit 1; fi
           done
           SIMPLE_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-1");' | tr -d '\r' | tail -n 1)
           echo "SIMPLE_ID raw: $SIMPLE_ID"
