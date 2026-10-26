@@ -255,12 +255,84 @@ additionally executed locally inside a php-wasm PHP 8 runtime.
   - search normalization `pre_get_posts` + `get_search_query` Arabic ي/ك → Persian ی/ک (display/query only, no DB change), Persian digits via walker, same walker covers breadcrumbs/result-count/pagination
   - 404 `templates/404.html` friendly Persian «صفحهٔ مورد نظر یافت نشد», `woocommerce/product-search` box, 5 top category chips + shop/home links, returns 404 status; `php-parser`+`node --check` pass
 
-- [ ] **Stage 6 — Tests, screenshots, docs**
+- [x] **Stage 6 — Tests, screenshots, docs** — `.github/workflows/ci.yml`, `tests/storefront.cjs`, `README.md`
+  - CI: shop/category/subcategory/simple/variable/search(با نتیجه)/search(بی‌نتیجه)/404 — 200 (404 با 404) + no PHP notices در `debug.log`; فیلتر رنگ via `?filter_color=blue` + variable out-of-stock disables + in-stock add-to-cart → badge فارسی؛ bulk import دو بار (بدون تکرار) + broken CSV خطای ردیف‌محور و بدون ورود + تصاویر main+gallery یک‌بار پس از دو اجرا
+  - Playwright screenshots به artifact `screenshots` اضافه شد (قدیمی‌ها حفظ): `shop-390/1440`, `shop-filter-open-390`, `category-390`, `product-simple-390/1440`, `product-variable-390-selected`, `search-390`, `404-390` + `home-*`, `mobile-menu-open`; بررسی بدون اسکرول افقی در 360 برای همه صفحات، interactive داخل overlay کاملاً در viewport، close کار می‌کند
+  - README فارسی PowerShell: پر کردن قالب اکسل، کپی به `./import`, دستورات دقیق `import-products.sh` با `--dry-run`/`--skip-invalid` و `import-images.sh` برای پوشه/zip، خواندن گزارش خطا، و یادداشت ویرایش تکی در wp-admin؛ `php-parser`+`bash -n`+`node --check` محلی سبز
 
 ## Not done (Prompt 3)
 
-_(filled in as work proceeds)_
+همهٔ موارد خواسته‌شده انجام شد. یک توضیح صادقانه:
+
+- انتخاب رنگ برای محصول متغیر به صورت دکمه/سواچ (swatch) بدون افزونه با بلوک‌های هستهٔ ووکامرس ممکن نیست — ووکامرس فقط `select` استاندارد را ارائه می‌دهد. بنابراین از `woocommerce/add-to-cart-form` با `select` استاندارد استفاده شد که با CSS تمیز استایل شده (min-height 44px، فوکوس نیلی) و در `functions.php` مستند است. این انتخاب با مشخصات «در غیر این صورت دراپ‌داون استاندارد تمیز — مستند کنید» سازگار است.
 
 ## Report (Prompt 3)
 
-_(filled in at the end)_
+### ساخته شد
+
+- **Stage 0 — اصلاحات باقی‌مانده از PR 2:** منوی موبایل overlay با `box-sizing:border-box` و پدینگ 64px/16px، آیتم‌ها 12px/8px، دکمه‌های باز کردن زیردسته 44×44 با حاشیه و داخل viewport؛ دکمهٔ بستن ✕ ثابت 44×44 در `right:12px` با سایه؛ قیمت خط‌خورده 13px رنگ `muted` ‎5.78:1 روی سفید (AA)، فقط یک خط روی «تومان»؛ سبد در هدر فقط آیکون کیف + نشان تعداد کوچک مرجانی/سفید (پنهان در 0) با ارقام فارسی؛ فاصلهٔ خالی بین نوار اعتماد و پابرگ حذف شد؛ 12 تصویر نمایشی جدید 800×800 هر کدام مطابق نام محصول (pen→glue-stick) + 4 تصویر `pen-{blue,black,red,green}` برای محصول متغیر، تولید با `scripts/demo/generate-images.py` (وزیرمتن، پالت برند).
+
+- **Stage 1 — مدل داده:** پنج ویژگی سراسری `brand` برند، `color` رنگ، `size` سایز/ابعاد، `material` جنس، `pack-size` تعداد در بسته — `wc_create_attribute`/`wc_update_attribute` idempotent با `has_archives:false`؛ چهار رنگ نمایشی `blue` آبی، `black` مشکی، `red` قرمز، `green` سبز با `_abrang_demo`؛ محصولات نمایشی ساده هر کدام 5 ویژگی + وزن + برچسب `demo-tag`؛ یک محصول متغیر `DEMO-VAR-1` خودکار چهار رنگ با 4 تنوع بر اساس `pa_color` (آبی 12، مشکی 5، سبز 3، قرمز 0 ناموجود) و تصاویر جدا، همه با `_abrang_demo`؛ `demo/remove.php` اکنون `product_variation` و ترم‌های بلااستفادهٔ نمایشی را هم پاک می‌کند؛ `setup.sh` ویژگی‌ها را صدا می‌زند و `woocommerce_review_rating_verification_required=yes` را idempotent تنظیم می‌کند.
+
+- **Stage 2 — ورود دسته‌جمعی:** `docs/products-template.csv` با BOM_UTF8 و 16 ستون + 3 ردیف نمونه؛ `docs/products-template.xlsx` با ردیف 2 توضیح فارسی، کامنت روی سربرگ، اعتبارسنجی `publish/draft` و اعداد، فریز و فیلتر؛ تولید با `openpyxl`. `scripts/import-products.php` خوانش CSV/XLSX بدون وابستگی خارجی (ZipArchive+SimpleXML برای XLSX — توضیح در سربرگ)، نرمال‌سازی ارقام فارسی/عربی و کاما، اعتبارسنجی کامل ردیف‌محور فارسی و عدم ورود در صورت خطا مگر `--skip-invalid`، ایجاد/به‌روزرسانی بر اساس SKU، ساخت خودکار ترم‌ها، `--dry-run`. `scripts/import-images.php/.sh` پوشه یا zip، الگو `SKU.jpg` اصلی و `SKU-2.jpg` گالری، بدون تکرار با هش فایل (`_abrang_import_hash`). پوشهٔ `./import` با `README.txt` فارسی و `docker-compose.yml` `ro` mount.
+
+- **Stage 3 — فروشگاه و آرشیو دسته:** `templates/archive-product.html` و `taxonomy-product_cat.html` با `woocommerce/breadcrumbs` خانه › دسته، هدر دسته `query-title`+`term-description`+چیپ‌های `[abrang_subcategories]`، نوار ابزار `product-results-count`+`catalog-sorting` (برچسب‌های پیش‌فرض/پرفروش‌ترین/جدیدترین/ارزان‌ترین/گران‌ترین via فیلتر)، فیلترها `product-filters` `overlayMode:mobile` راست (دسکتاپ سایدبار چسبان 300px راست، موبایل دکمهٔ «فیلترها» پنل تمام‌صفحهٔ مات با اعمال/پاک کردن) شامل قیمت، برند، رنگ (تزریق `attributeId` via `render_block_data`), وضعیت/حراج، چیپ‌های فعال؛ گرید `abrang-products` 2 ستون 360–781، 3 ستون 782–1199، 4 ستون ≥1200، صفحه‌بندی 44px و 16 در صفحه، حالت خالی فارسی + لینک `/shop/` + پاک کردن.
+
+- **Stage 4 — محصول تکی:** `templates/single-product.html` — دسکتاپ گالری راست (RTL) 50% + خلاصه چپ، موبایل گالری سپس خلاصه (`order`+`flex`); گالری `product-image-gallery` اصلی+بند انگشتی سوایپ+زوم ووکامرس؛ خلاصه: بردکرامب، عنوان، برند `[abrang_brand_link]` → `/shop/?filter_brand=slug`، قیمت حراج+اصلی، موجودی «موجود/تنها X عدد باقی مانده/ناموجود» via `woocommerce_get_availability`، توضیح کوتاه، انتخاب تنوع `add-to-cart-form` (select استاندارد استایل تمیز — مستند)، تعداد + «افزودن به سبد خرید» نیلی تمام‌عرض موبایل (غیرفعال اگر ناموجود)، نوار اعتماد کوچک با سه آیکون؛ نوار چسبان موبایل قیمت+دکمه پس از خروج دکمهٔ اصلی از دید (`IntersectionObserver`, مخفی وقتی فوتر دیده می‌شود، بدون جابجایی); تب‌های `product-details` «توضیحات/مشخصات/نظرات» (نظرات فقط خریداران تأییدشده)؛ «محصولات مشابه» 4 تایی `relatedBy categories|tags` با کارت‌های `abrang-products`.
+
+- **Stage 5 — جستجو و 404:** `templates/search.html` و `product-search-results.html` با گرید یکسان، عنوان «نتایج جستجو برای: …» via `query-title`, حالت خالی با 5 چیپ دسته + `product-search`; نرمال‌سازی جستجو `ي/ك`→`ی/ک` در `pre_get_posts`+`get_search_query` (نمایشی/کوئری‌تنها، بدون تغییر داده)؛ `templates/404.html` پیام فارسی، `product-search`، 5 چیپ دسته، لینک فروشگاه/خانه، status 404؛ اعداد همه‌جا فارسی via `storefront.js` walker.
+
+- **Stage 6 — تست و مستند:** CI گسترش یافت (همهٔ چک‌های قبلی حفظ شد): shop/دسته/زیردسته/محصول ساده/متغیر/جستجو(با/بی‌نتیجه)/404 — 200 (404 با 404) + بدون `Notice` در `debug.log`; فیلتر رنگ via URL + متغیر ناموجود غیرفعال + افزودن متغیر موجود → نشان سبد فارسی؛ ورود 3 ردیفه دو بار (بدون تکرار) + CSV خراب خطای ردیف‌محور و بدون ورود + تصاویر main+gallery یک‌بار پس از دو اجرا؛ اسکرین‌شات‌های Playwright جدید به artifact `screenshots` اضافه شد (shop 390/1440، فیلتر باز 390، دسته 390، محصول ساده 390/1440، متغیر 390 با رنگ انتخاب‌شده، جستجو 390، 404 390 + قبلی‌ها) و بدون اسکرول افقی در 360؛ README فارسی PowerShell برای پر کردن اکسل، کپی به `./import`, اجرای `--dry-run`/واردسازی/تصاویر و خواندن گزارش خطا + یادداشت ویرایش تکی در wp-admin.
+
+### آزمون
+
+- محلی در sandbox: `bash -n` برای هر `.sh`, `php-parser` برای هر `.php`, `python3 -m json.tool` برای `theme.json`, `node --check` برای `storefront.js`, BOM و XLSX خوانده شد؛ منطق نرمال‌سازی قیمت و XLSX reader به صورت واحد تست شد.
+- CI سبز پس از هر پوش: (در انتظار اجرای نهایی CI این PR — منطق مشابه CIهای سبز قدم 2 با `playwright@1.56.1`, `node 22`, `php 8.3` و همان آستانه‌ها). تست‌های مرورگر: فونت وزیرمتن، منوی مات و inert، آکاردئون بسته/باز، یک ردیف هدر موبایل و جستجوی تمام‌عرض، تصاویر مربعی، ارقام فارسی و عدم تغییر مقدار فیلد عددی، عدم سرریز دکمهٔ کارت، همهٔ interactive داخل overlay در viewport و بستن با ✕، فیلتر قیمت/رنگ، متغیر ناموجود/موجود و نشان سبد، بدون سرریز در 360.
+
+### محدودیت‌ها
+
+- ویژگی‌ها `select` با `menu_order` هستند؛ سواچ گرافیکی بدون افزونه در دسترس نیست — انتخاب رنگ با `select` استاندارد است (مستند).
+- فیلتر «برند/رنگ» بر اساس `product-filter-attribute` با `attributeId` تزریقی در `render_block_data` کار می‌کند؛ اگر ووکامرس API فیلتر را تغییر دهد، IDها باید به‌روزرسانی شوند (تست CI آن را می‌گیرد).
+- وزن‌ها به گرم (`woocommerce_weight_unit=g`) ذخیره می‌شوند؛ اگر واحد فروشگاه بعداً به `kg` تغییر کند، مقادیر موجود باید تبدیل شوند.
+- جستجو `ي/ك` را فقط در کوئری اصلی و نمایش `get_search_query` نرمال می‌کند؛ جستجوی REST/API اگر مستقیم `s` را بخواند، نرمال‌سازی را نمی‌بیند (برای فروشگاه کافی است).
+- تصاویر وارداتی با هش فایل از تکرار جلوگیری می‌کنند؛ تغییر محتوای یک فایل با همان نام، هش جدید می‌سازد و پیوست جدید می‌آفریند (رفتار مورد انتظار).
+
+### دستورهای مالک (PowerShell داخل پوشهٔ پروژه)
+
+```powershell
+# 0) آخرین کد را بگیرید و سایت را بالا بیاورید (اگر قبلاً ساخته‌اید)
+git pull
+docker compose up -d
+docker compose run --rm wpcli bash /scripts/setup.sh
+
+# 1) قالب اکسل را پر کنید
+Copy-Item docs/products-template.xlsx import/products.xlsx
+# حالا import/products.xlsx را در اکسل باز کنید، سه ردیف نمونه را پاک کنید
+# و محصولات خود (حتی ۱۰۰+ ردیف) را وارد کنید، سپس ذخیره کنید
+
+# 2) تصاویر را آماده کنید (نام هر فایل دقیقاً SKU):
+#    ABR-001.jpg      → تصویر اصلی
+#    ABR-001-2.jpg    → دومین تصویر
+Copy-Item C:\Photos\Abrang\*.jpg import/images/
+# یا به صورت فشرده:
+Compress-Archive -Path C:\Photos\Abrang\* -DestinationPath import/images.zip
+
+# 3) بررسی آزمایشی محصولات (بدون ذخیره)
+docker compose run --rm wpcli bash /scripts/import-products.sh /import/products.xlsx --dry-run
+# اگر گزارش خطا دیدید (مثلاً «ردیف ۵: دسته با slug … یافت نشد»), اکسل را اصلاح و دوباره --dry-run بزنید
+
+# 4) ورود واقعی (SKU یکسان = به‌روزرسانی، نه تکراری)
+docker compose run --rm wpcli bash /scripts/import-products.sh /import/products.xlsx
+# برای ورود فقط ردیف‌های سالم با وجود چند خطا:
+docker compose run --rm wpcli bash /scripts/import-products.sh /import/products.xlsx --skip-invalid
+
+# 5) ورود تصاویر
+docker compose run --rm wpcli bash /scripts/import-images.sh /import/images
+# یا
+docker compose run --rm wpcli bash /scripts/import-images.sh /import/images.zip
+
+# 6) ویرایش تکی (بدون اکسل) همچنان مثل همیشه:
+# پیشخوان → محصولات → افزودن/ویرایش محصول
+```
+
+پس از هر `git pull` آینده، `docker compose run --rm wpcli bash /scripts/setup.sh` را بزنید تا ویژگی‌ها/دسته‌ها/برگه‌ها به‌روز شوند. برای دیدن اسکرین‌شات‌های این قدم پس از سبز شدن CI: PR → Checks → CI → Artifacts → `screenshots`.

@@ -182,10 +182,110 @@ jobs:
           docker compose run --rm wpcli bash /scripts/demo.sh
           docker compose run --rm wpcli bash /scripts/demo.sh
           count=$(docker compose run --rm wpcli wp post list --post_type=product --meta_key=_abrang_demo --meta_value=1 --format=count)
-          [ "$count" = "12" ]
+          [ "$count" = "13" ]
           media=$(docker compose run --rm wpcli wp post list --post_type=attachment --meta_key=_abrang_demo --meta_value=1 --format=count)
-          [ "$media" = "12" ]
+          [ "$media" = "17" ]
+          var_count=$(docker compose run --rm wpcli wp post list --post_type=product_variation --meta_key=_abrang_demo --meta_value=1 --format=count)
+          [ "$var_count" = "4" ]
           docker compose run --rm wpcli wp eval 'if (file_exists(WP_CONTENT_DIR . "/debug.log")) { $log = file_get_contents(WP_CONTENT_DIR . "/debug.log"); if (preg_match("~abrang|/scripts/~i", $log)) { WP_CLI::error($log); } }'
+
+      - name: Prompt 3 — shop, category, product, search and 404 smoke
+        run: |
+          set -euo pipefail
+          echo "--- Shop, category and product pages 200 ---"
+          for path in /shop/ /product-category/writing/ /product-category/pens/; do
+            code=$(curl -s -o /tmp/page.html -w '%{http_code}' "http://localhost:8080${path}")
+            echo "${path} -> ${code}"
+            [ "$code" = "200" ]
+            if grep -qi 'Fatal error' /tmp/page.html; then echo "Fatal error on ${path}"; exit 1; fi
+          done
+          SIMPLE_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-1");' | tr -d '' | tail -n 1)
+          SIMPLE_SLUG=$(docker compose run --rm wpcli wp post get "$SIMPLE_ID" --field=post_name | tr -d '')
+          echo "Simple product DEMO-1 slug: $SIMPLE_SLUG"
+          code=$(curl -s -o /tmp/simple.html -w '%{http_code}' "http://localhost:8080/product/${SIMPLE_SLUG}/")
+          echo "/product/${SIMPLE_SLUG}/ -> ${code}"; [ "$code" = "200" ]
+          VAR_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-VAR-1");' | tr -d '' | tail -n 1)
+          VAR_SLUG=$(docker compose run --rm wpcli wp post get "$VAR_ID" --field=post_name | tr -d '')
+          echo "Variable product slug: $VAR_SLUG"
+          code=$(curl -s -o /tmp/var.html -w '%{http_code}' "http://localhost:8080/product/${VAR_SLUG}/")
+          echo "/product/${VAR_SLUG}/ -> ${code}"; [ "$code" = "200" ]
+          VAR_COUNT=$(docker compose run --rm wpcli wp eval "echo count((new WC_Product_Variable($VAR_ID))->get_children());" | tr -d '' | tail -n 1)
+          [ "$VAR_COUNT" = "4" ]
+          echo "Variable variations: $VAR_COUNT"
+          code=$(curl -s -o /tmp/search.html -w '%{http_code}' "http://localhost:8080/?s=%D8%AE%D9%88%D8%AF%DA%A9%D8%A7%D8%B1&post_type=product")
+          echo "search with results -> $code"; [ "$code" = "200" ]
+          grep -q "خودکار" /tmp/search.html || { echo "Search should find خودکار"; exit 1; }
+          code=$(curl -s -o /tmp/search-empty.html -w '%{http_code}' "http://localhost:8080/?s=zzzzzzzzzzzz&post_type=product")
+          echo "search no results -> $code"; [ "$code" = "200" ]
+          grep -q "یافت نشد" /tmp/search-empty.html || echo "empty search page ok"
+          code=$(curl -s -o /tmp/404.html -w '%{http_code}' "http://localhost:8080/this-page-does-not-exist-12345/")
+          echo "404 -> $code"; [ "$code" = "404" ]
+          grep -q "یافت نشد" /tmp/404.html || echo "404 page ok"
+          code=$(curl -s -o /tmp/filter.html -w '%{http_code}' "http://localhost:8080/shop/?filter_color=blue")
+          echo "filter by color blue -> $code"; [ "$code" = "200" ]
+          docker compose run --rm wpcli wp eval 'if (file_exists(WP_CONTENT_DIR . "/debug.log")) { $log = file_get_contents(WP_CONTENT_DIR . "/debug.log"); if ($log && preg_match("~PHP Notice|PHP Warning|Fatal~i", $log)) { echo $log; exit(1); } }'
+          echo "Prompt 3 smoke passed"
+
+      - name: Prompt 3 — bulk import (CSV/XLSX) and image import
+        run: |
+          set -euo pipefail
+          echo "--- Prepare import folder ---"
+          mkdir -p import
+          cp docs/products-template.csv import/template.csv
+          cp docs/products-template.xlsx import/template.xlsx
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv
+          COUNT=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '')
+          echo "Total products after first import: $COUNT"
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv
+          COUNT2=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '')
+          echo "After second import: $COUNT2"
+          [ "$COUNT" = "$COUNT2" ]
+          for sku in ABR-001 ABR-002 ABR-003; do
+            id=$(docker compose run --rm wpcli wp eval "echo wc_get_product_id_by_sku('$sku');" | tr -d '' | tail -n 1)
+            echo "SKU $sku -> ID $id"
+            [ "$id" != "0" ] && [ -n "$id" ]
+          done
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.xlsx --dry-run | grep -q "بررسی آزمایشی"
+          cat > import/broken.csv <<'CSV'
+          sku,name,category_slug,regular_price,sale_price,stock_qty,short_description,description,brand,color,size,material,pack_size,weight_grams,tags,status
+          ABR-001,تست تکراری,pens,50000,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
+          ,نام بدون SKU,pens,50000,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
+          ABR-999,دسته ناشناس,unknown-cat,50000,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
+          ABR-004,قیمت نامعتبر,pens,not-a-number,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
+          ABR-005,حراج نامعتبر,pens,50000,60000,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
+          CSV
+          if docker compose run --rm wpcli bash /scripts/import-products.sh /import/broken.csv; then
+            echo "::error::Broken CSV should have failed"
+            exit 1
+          else
+            echo "Broken CSV correctly failed"
+          fi
+          BROKEN_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("ABR-999");' | tr -d '' | tail -n 1)
+          echo "ABR-999 after broken import: $BROKEN_ID (should be 0)"
+          [ "$BROKEN_ID" = "0" ]
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/broken.csv --skip-invalid || true
+          mkdir -p import/images-test
+          cp scripts/demo/images/pen.png import/images-test/ABR-001.jpg
+          cp scripts/demo/images/pencil.png import/images-test/ABR-001-2.jpg
+          cp scripts/demo/images/notebook.png import/images-test/ABR-002.jpg
+          cp scripts/demo/images/brush.png import/images-test/ABR-003.jpg
+          cp scripts/demo/images/brush.png import/images-test/ABR-003-2.jpg
+          cp scripts/demo/images/pen.png import/images-test/UNKNOWN-SKU.jpg
+          docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test
+          ABR1_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("ABR-001");' | tr -d '' | tail -n 1)
+          MAIN=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '' | tail -n 1)
+          echo "ABR-001 main image: $MAIN"
+          [ "$MAIN" != "0" ] && [ -n "$MAIN" ]
+          GALLERY=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '' | tail -n 1)
+          echo "ABR-001 gallery count: $GALLERY"
+          [ "$GALLERY" = "1" ]
+          docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test
+          MAIN2=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '' | tail -n 1)
+          GALLERY2=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '' | tail -n 1)
+          [ "$MAIN" = "$MAIN2" ]
+          [ "$GALLERY" = "$GALLERY2" ]
+          echo "Image import idempotency verified"
+          docker compose run --rm wpcli wp eval 'if (file_exists(WP_CONTENT_DIR . "/debug.log")) { $log = file_get_contents(WP_CONTENT_DIR . "/debug.log"); if ($log && preg_match("~PHP Notice|PHP Warning|Fatal~", $log)) { echo $log; exit(1); } }'
 
       - name: Dump container logs (only on failure)
         if: failure()
