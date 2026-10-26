@@ -331,8 +331,17 @@ async function checkPersianPrices(page) {
     const page = await browser.newPage({viewport:{width:1440,height:900}});
     await page.goto('http://localhost:8080/shop/?filter_color=blue&query_type_color=or', {waitUntil:'networkidle'});
     const content = await page.content();
-    assert.ok(content.includes('خودکار آبی نرم'), 'Filter blue should contain blue product');
-    assert.ok(!content.includes('دفتر خط‌دار'), 'Filter blue should NOT contain red product دفتر خط‌دار');
+    const hasBlue = content.includes('خودکار آبی نرم');
+    const hasRed = content.includes('دفتر خط‌دار');
+    const count = await page.locator('.wc-block-product-template > li').count();
+    console.log('filter debug: hasBlue='+hasBlue+' hasRed='+hasRed+' count='+count);
+    // Debug: save content for artifact on failure
+    if (!hasBlue || hasRed) {
+      require('node:fs').writeFileSync('screenshots/filter-debug.html', content.slice(0,5000));
+      console.log('filter content snippet:', content.slice(content.indexOf('خودکار')-200, content.indexOf('خودکار')+500).replace(/\n/g,' '));
+    }
+    assert.ok(hasBlue, 'Filter blue should contain blue product خودکار آبی نرم');
+    assert.ok(!hasRed, 'Filter blue should NOT contain red product دفتر خط‌دار');
     await page.close();
   }
 

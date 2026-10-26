@@ -157,9 +157,21 @@ jobs:
           node-version: '22'
       - name: Browser checks and full-page screenshots
         run: |
+          set -o pipefail
           npm install --no-save --package-lock=false playwright@1.56.1
           npx playwright install --with-deps chromium
-          node tests/storefront.cjs
+          node tests/storefront.cjs 2>&1 | tee browser.log
+          code=${PIPESTATUS[0]}
+          echo "browser exit code: $code" | tee -a browser.log
+          cat browser.log
+          exit $code
+      - name: Upload browser log (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-log
+          path: browser.log
+          if-no-files-found: warn
       - name: Upload visual review artifacts
         if: always()
         uses: actions/upload-artifact@v4
