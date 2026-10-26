@@ -234,7 +234,13 @@ additionally executed locally inside a php-wasm PHP 8 runtime.
   - `./import` git-ignored با `README.txt` فارسی، در `docker-compose.yml` به صورت `ro` به `wpcli` سوار شد (`./import:/import:ro`)
   - اعتبارسنجی محلی: `bash -n`, `php-parser` برای هر PHP، BOM و XLSX خوانده شد، خوانش XLSX با ZipArchive تست منطقی
 
-- [ ] **Stage 3 — Shop and category archive template**
+- [x] **Stage 3 — Shop and category archive template** — `templates/{archive-product.html,taxonomy-product_cat.html}`, `functions.php` (chips shortcode, catalog sorting Persian labels, attributeId injection), `style.css` (archive grid, chips, toolbar, filters, pagination), `assets/storefront.js` (filter button «فیلترها», wider digit selectors)
+  - breadcrumbs `woocommerce/breadcrumbs` خانه › دسته › زیردسته، Persian digits via walker
+  - category header: `query-title`+`term-description` + chips `[abrang_subcategories]` (top-level shows children, subcategory shows siblings, shop shows all 5) with `.abrang-chip` styling
+  - toolbar: `woocommerce/product-results-count` + `woocommerce/catalog-sorting` (labels پیش‌فرض/پرفروش‌ترین/جدیدترین/ارزان‌ترین/گران‌ترین via `woocommerce_catalog_orderby` filter)
+  - filters: `woocommerce/product-filters` overlayMode mobile right (sidebar sticky 300px on desktop right, «فیلترها» opaque full-screen panel on mobile with apply/clear), inner: `product-filter-price` قیمت, `product-filter-attribute` برند (class abrang-filter-brand) + رنگ (abrang-filter-color) with `render_block_data` injecting `pa_brand/pa_color` IDs, `product-filter-status` موجودی/حراج, `product-filter-active` removable chips + clear — no builders, core + Woo blocks only
+  - grid `.abrang-products` 2 cols 360–781, 3 cols 782–1199, 4 cols ≥1200 via `style.css` (update to `max-width:1199`), pagination `abrang-pagination` 44px, `perPage:16`, Persian digits via walker, 16 per page
+  - empty state Persian «محصولی با این فیلترها یافت نشد» + link `/shop/` + clear button via `product-collection-no-results`; `php-parser` + `node --check` pass
 
 - [ ] **Stage 4 — Single product template**
 

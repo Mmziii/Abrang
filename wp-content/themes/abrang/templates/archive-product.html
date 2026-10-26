@@ -1,0 +1,173 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+<!-- wp:group {"tagName":"main","className":"abrang-archive","layout":{"type":"constrained"}} -->
+<main class="wp-block-group abrang-archive">
+<!-- wp:woocommerce/breadcrumbs /-->
+<!-- wp:group {"className":"abrang-archive-header","layout":{"type":"constrained"}} -->
+<div class="wp-block-group abrang-archive-header">
+<!-- wp:query-title {"type":"archive","showPrefix":false,"style":{"spacing":{"margin":{"bottom":"var:preset|spacing|heading"}}}} /-->
+<!-- wp:term-description {"style":{"spacing":{"margin":{"bottom":"var:preset|spacing|heading"}}}} /-->
+<!-- wp:shortcode -->[abrang_subcategories]<!-- /wp:shortcode -->
+</div>
+<!-- /wp:group -->
+<!-- wp:group {"className":"abrang-archive-toolbar","layout":{"type":"flex","flexWrap":"nowrap","justifyContent":"space-between","verticalAlignment":"center"}} -->
+<div class="wp-block-group abrang-archive-toolbar">
+<!-- wp:woocommerce/product-results-count /-->
+<!-- wp:woocommerce/catalog-sorting /-->
+</div>
+<!-- /wp:group -->
+<!-- wp:group {"className":"abrang-archive-layout","layout":{"type":"constrained"}} -->
+<div class="wp-block-group abrang-archive-layout">
+<!-- wp:columns {"className":"abrang-columns","verticalAlignment":"top"} -->
+<div class="wp-block-columns abrang-columns">
+<!-- wp:column {"width":"75%","className":"abrang-products-column"} -->
+<div class="wp-block-column abrang-products-column">
+<!-- wp:woocommerce/product-collection {"queryId":1,"query":{"woocommerceAttributes":[],"woocommerceStockStatus":["instock","outofstock","onbackorder"],"taxQuery":{},"isProductCollectionBlock":true,"perPage":16,"pages":0,"offset":0,"postType":"product","order":"asc","orderBy":"title","author":"","search":"","exclude":[],"sticky":"","inherit":true},"tagName":"div","displayLayout":{"type":"flex","columns":4,"shrinkColumns":true},"dimensions":{"widthType":"fill"},"queryContextIncludes":["collection"],"className":"abrang-products","align":"wide"} -->
+<div class="wp-block-woocommerce-product-collection alignwide abrang-products">
+<!-- wp:woocommerce/product-template -->
+<!-- wp:woocommerce/product-image {"showSaleBadge":false,"imageSizing":"cropped","aspectRatio":"1"} /-->
+<!-- wp:post-title {"level":3,"isLink":true,"fontSize":"medium"} /-->
+<!-- wp:woocommerce/product-price /-->
+<!-- wp:woocommerce/product-button /-->
+<!-- /wp:woocommerce/product-template -->
+<!-- wp:query-pagination {"layout":{"type":"flex","justifyContent":"center"},"className":"abrang-pagination"} -->
+<!-- wp:query-pagination-previous {"label":"قبلی"} /-->
+<!-- wp:query-pagination-numbers /-->
+<!-- wp:query-pagination-next {"label":"بعدی"} /-->
+<!-- /wp:query-pagination -->
+<!-- wp:woocommerce/product-collection-no-results -->
+<!-- wp:group {"className":"abrang-empty","layout":{"type":"flex","orientation":"vertical","justifyContent":"center"}} -->
+<div class="wp-block-group abrang-empty">
+<!-- wp:paragraph {"align":"center","fontSize":"large"} -->
+<p class="has-text-align-center has-large-font-size">محصولی با این فیلترها یافت نشد.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph {"align":"center"} -->
+<p class="has-text-align-center"><a href="/shop/">مشاهدهٔ همهٔ محصولات</a></p>
+<!-- /wp:paragraph -->
+<!-- wp:woocommerce/product-filter-clear-button -->
+<!-- wp:buttons {"layout":{"type":"flex","justifyContent":"center"}} -->
+<div class="wp-block-buttons"><!-- wp:button {"className":"is-style-outline"} --><div class="wp-block-button is-style-outline"><a class="wp-block-button__link wp-element-button">پاک کردن فیلترها</a></div><!-- /wp:button --></div>
+<!-- /wp:buttons -->
+<!-- /wp:woocommerce/product-filter-clear-button -->
+</div>
+<!-- /wp:group -->
+<!-- /wp:woocommerce/product-collection-no-results -->
+</div>
+<!-- /wp:woocommerce/product-collection -->
+</div>
+<!-- /wp:column -->
+<!-- wp:column {"width":"25%","className":"abrang-filters-column"} -->
+<div class="wp-block-column abrang-filters-column">
+<!-- wp:woocommerce/product-filters {"overlayMode":"mobile","overlayPosition":"right","style":{"position":{"type":"sticky","top":"24px"}}} -->
+<div class="wp-block-woocommerce-product-filters">
+<!-- wp:heading {"level":3,"style":{"spacing":{"margin":{"bottom":"var:preset|spacing|heading"}}}} -->
+<h3 class="wp-block-heading">فیلترها</h3>
+<!-- /wp:heading -->
+<!-- wp:woocommerce/product-filter-active -->
+<div class="wp-block-woocommerce-product-filter-active">
+<!-- wp:woocommerce/product-filter-removable-chips --><div class="wp-block-woocommerce-product-filter-removable-chips"></div><!-- /wp:woocommerce/product-filter-removable-chips -->
+<!-- wp:woocommerce/product-filter-clear-button --><!-- wp:buttons --><div class="wp-block-buttons"><!-- wp:button {"className":"is-style-outline"} --><div class="wp-block-button is-style-outline"><a class="wp-block-button__link wp-element-button">پاک کردن همه</a></div><!-- /wp:button --></div><!-- /wp:buttons --><!-- /wp:woocommerce/product-filter-clear-button -->
+</div>
+<!-- /wp:woocommerce/product-filter-active -->
+<!-- wp:woocommerce/product-filter-price -->
+<div class="wp-block-woocommerce-product-filter-price">
+<!-- wp:accordion -->
+<div class="wp-block-accordion">
+<!-- wp:accordion-item -->
+<div class="wp-block-accordion-item">
+<!-- wp:accordion-heading {"level":4} -->
+<h4 class="wp-block-accordion-heading"><button type="button" class="wp-block-accordion-heading__toggle"><span class="wp-block-accordion-heading__toggle-title">قیمت</span><span class="wp-block-accordion-heading__toggle-icon" aria-hidden="true">+</span></button></h4>
+<!-- /wp:accordion-heading -->
+<!-- wp:accordion-panel -->
+<div class="wp-block-accordion-panel">
+<!-- wp:woocommerce/product-filter-price-slider --><div class="wp-block-woocommerce-product-filter-price-slider"></div><!-- /wp:woocommerce/product-filter-price-slider -->
+</div>
+<!-- /wp:accordion-panel -->
+</div>
+<!-- /wp:accordion-item -->
+</div>
+<!-- /wp:accordion -->
+</div>
+<!-- /wp:woocommerce/product-filter-price -->
+<!-- wp:woocommerce/product-filter-attribute {"className":"abrang-filter-brand"} -->
+<div class="wp-block-woocommerce-product-filter-attribute abrang-filter-brand">
+<!-- wp:accordion -->
+<div class="wp-block-accordion">
+<!-- wp:accordion-item -->
+<div class="wp-block-accordion-item">
+<!-- wp:accordion-heading {"level":4} -->
+<h4 class="wp-block-accordion-heading"><button type="button" class="wp-block-accordion-heading__toggle"><span class="wp-block-accordion-heading__toggle-title">برند</span><span class="wp-block-accordion-heading__toggle-icon" aria-hidden="true">+</span></button></h4>
+<!-- /wp:accordion-heading -->
+<!-- wp:accordion-panel -->
+<div class="wp-block-accordion-panel">
+<!-- wp:woocommerce/product-filter-checkbox-list --><div class="wp-block-woocommerce-product-filter-checkbox-list"></div><!-- /wp:woocommerce/product-filter-checkbox-list -->
+</div>
+<!-- /wp:accordion-panel -->
+</div>
+<!-- /wp:accordion-item -->
+</div>
+<!-- /wp:accordion -->
+</div>
+<!-- /wp:woocommerce/product-filter-attribute -->
+<!-- wp:woocommerce/product-filter-attribute {"className":"abrang-filter-color"} -->
+<div class="wp-block-woocommerce-product-filter-attribute abrang-filter-color">
+<!-- wp:accordion -->
+<div class="wp-block-accordion">
+<!-- wp:accordion-item -->
+<div class="wp-block-accordion-item">
+<!-- wp:accordion-heading {"level":4} -->
+<h4 class="wp-block-accordion-heading"><button type="button" class="wp-block-accordion-heading__toggle"><span class="wp-block-accordion-heading__toggle-title">رنگ</span><span class="wp-block-accordion-heading__toggle-icon" aria-hidden="true">+</span></button></h4>
+<!-- /wp:accordion-heading -->
+<!-- wp:accordion-panel -->
+<div class="wp-block-accordion-panel">
+<!-- wp:woocommerce/product-filter-checkbox-list --><div class="wp-block-woocommerce-product-filter-checkbox-list"></div><!-- /wp:woocommerce/product-filter-checkbox-list -->
+</div>
+<!-- /wp:accordion-panel -->
+</div>
+<!-- /wp:accordion-item -->
+</div>
+<!-- /wp:accordion -->
+</div>
+<!-- /wp:woocommerce/product-filter-attribute -->
+<!-- wp:woocommerce/product-filter-status -->
+<div class="wp-block-woocommerce-product-filter-status">
+<!-- wp:accordion -->
+<div class="wp-block-accordion">
+<!-- wp:accordion-item -->
+<div class="wp-block-accordion-item">
+<!-- wp:accordion-heading {"level":4} -->
+<h4 class="wp-block-accordion-heading"><button type="button" class="wp-block-accordion-heading__toggle"><span class="wp-block-accordion-heading__toggle-title">وضعیت موجودی</span><span class="wp-block-accordion-heading__toggle-icon" aria-hidden="true">+</span></button></h4>
+<!-- /wp:accordion-heading -->
+<!-- wp:accordion-panel -->
+<div class="wp-block-accordion-panel">
+<!-- wp:woocommerce/product-filter-checkbox-list --><div class="wp-block-woocommerce-product-filter-checkbox-list"></div><!-- /wp:woocommerce/product-filter-checkbox-list -->
+</div>
+<!-- /wp:accordion-panel -->
+</div>
+<!-- /wp:accordion-item -->
+<!-- wp:accordion-item -->
+<div class="wp-block-accordion-item">
+<!-- wp:accordion-heading {"level":4} -->
+<h4 class="wp-block-accordion-heading"><button type="button" class="wp-block-accordion-heading__toggle"><span class="wp-block-accordion-heading__toggle-title">حراج</span><span class="wp-block-accordion-heading__toggle-icon" aria-hidden="true">+</span></button></h4>
+<!-- /wp:accordion-heading -->
+<!-- wp:accordion-panel -->
+<div class="wp-block-accordion-panel">
+<!-- wp:woocommerce/product-filter-checkbox-list --><div class="wp-block-woocommerce-product-filter-checkbox-list"></div><!-- /wp:woocommerce/product-filter-checkbox-list -->
+</div>
+<!-- /wp:accordion-panel -->
+</div>
+<!-- /wp:accordion-item -->
+</div>
+<!-- /wp:accordion -->
+</div>
+<!-- /wp:woocommerce/product-filter-status -->
+</div>
+<!-- /wp:woocommerce/product-filters -->
+</div>
+<!-- /wp:column -->
+</div>
+<!-- /wp:columns -->
+</div>
+<!-- /wp:group -->
+</main>
+<!-- /wp:group -->
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

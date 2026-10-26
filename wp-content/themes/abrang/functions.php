@@ -81,6 +81,102 @@ add_filter( 'render_block_woocommerce/product-button', static function ( $conten
     return $content;
 }, 10, 3 );
 
+/** Sub-category chips for the archive header — [abrang_subcategories]. */
+add_shortcode( 'abrang_subcategories', static function () {
+    if ( is_admin() ) {
+        return '';
+    }
+    $term = get_queried_object();
+    $is_shop = function_exists( 'is_shop' ) && is_shop();
+    $chips = array();
+    if ( $is_shop ) {
+        $tops = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false, 'parent' => 0, 'orderby' => 'name' ) );
+        if ( ! is_wp_error( $tops ) ) {
+            foreach ( $tops as $t ) {
+                // Skip the default “سایر” if it has no children (optional)
+                $chips[] = sprintf( '<a class="abrang-chip" href="%s">%s</a>', esc_url( get_term_link( $t ) ), esc_html( $t->name ) );
+            }
+        }
+    } elseif ( $term && isset( $term->taxonomy ) && 'product_cat' === $term->taxonomy ) {
+        // For a top-level category show its children; for a child show siblings (still useful).
+        $parent_id = (int) $term->parent === 0 ? (int) $term->term_id : (int) $term->parent;
+        $children = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false, 'parent' => $parent_id, 'orderby' => 'name' ) );
+        if ( ! is_wp_error( $children ) && $children ) {
+            foreach ( $children as $t ) {
+                $active = $term->term_id === $t->term_id ? ' is-active' : '';
+                $chips[] = sprintf( '<a class="abrang-chip%s" href="%s">%s</a>', $active, esc_url( get_term_link( $t ) ), esc_html( $t->name ) );
+            }
+        }
+    }
+    if ( empty( $chips ) ) {
+        return '';
+    }
+    return '<div class="abrang-chips">' . implode( '', $chips ) . '</div>';
+} );
+
+/** Translate WooCommerce catalog sorting labels to Persian. */
+add_filter( 'woocommerce_catalog_orderby', static function ( $options ) {
+    $map = array(
+        'menu_order' => 'پیش‌فرض',
+        'popularity' => 'پرفروش‌ترین',
+        'date'       => 'جدیدترین',
+        'price'      => 'ارزان‌ترین',
+        'price-desc' => 'گران‌ترین',
+        'rating'     => 'محبوب‌ترین',
+    );
+    foreach ( $map as $key => $label ) {
+        if ( isset( $options[ $key ] ) ) {
+            $options[ $key ] = $label;
+        }
+    }
+    return $options;
+} );
+add_filter( 'woocommerce_default_catalog_orderby_options', static function ( $options ) {
+    $map = array(
+        'menu_order' => 'پیش‌فرض',
+        'popularity' => 'پرفروش‌ترین',
+        'date'       => 'جدیدترین',
+        'price'      => 'ارزان‌ترین',
+        'price-desc' => 'گران‌ترین',
+        'rating'     => 'محبوب‌ترین',
+    );
+    foreach ( $options as $key => $label ) {
+        if ( isset( $map[ $key ] ) ) {
+            $options[ $key ] = $map[ $key ];
+        }
+    }
+    return $options;
+} );
+
+/** Inject correct attribute IDs into the archive filter blocks (brand = برند, color = رنگ). */
+add_filter( 'render_block_data', static function ( $parsed ) {
+    if ( ! isset( $parsed['blockName'] ) ) {
+        return $parsed;
+    }
+    // New product-filter-attribute blocks inside the archive use a class to identify brand vs color.
+    $class = $parsed['attrs']['className'] ?? '';
+    if ( 'woocommerce/product-filter-attribute' === $parsed['blockName'] && str_contains( $class, 'abrang-filter-' ) ) {
+        $slug = str_contains( $class, 'abrang-filter-brand' ) ? 'brand' : ( str_contains( $class, 'abrang-filter-color' ) ? 'color' : '' );
+        if ( $slug && function_exists( 'wc_attribute_taxonomy_id_by_name' ) ) {
+            $id = wc_attribute_taxonomy_id_by_name( $slug );
+            if ( $id ) {
+                $parsed['attrs']['attributeId'] = (int) $id;
+            }
+        }
+    }
+    // Legacy attribute-filter blocks (fallback) use the same class convention.
+    if ( 'woocommerce/attribute-filter' === $parsed['blockName'] && str_contains( $class, 'abrang-filter-' ) ) {
+        $slug = str_contains( $class, 'abrang-filter-brand' ) ? 'brand' : ( str_contains( $class, 'abrang-filter-color' ) ? 'color' : '' );
+        if ( $slug && function_exists( 'wc_attribute_taxonomy_id_by_name' ) ) {
+            $id = wc_attribute_taxonomy_id_by_name( $slug );
+            if ( $id ) {
+                $parsed['attrs']['attributeId'] = (int) $id;
+            }
+        }
+    }
+    return $parsed;
+}, 10, 1 );
+
 /** Display-only date digits. Never filter numeric timestamps, inputs, or stored data. */
 function abrang_display_digits( $text ) {
     if ( is_admin() || ! is_string( $text ) ) { return $text; }

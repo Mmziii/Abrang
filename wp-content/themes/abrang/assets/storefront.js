@@ -48,11 +48,29 @@ document.querySelectorAll('.wp-block-woocommerce-product-search').forEach(search
  });
 });
 
+/* Filter drawer label — ensure the mobile overlay button is Persian. */
+(() => {
+ const translate = () => {
+  document.querySelectorAll('.wc-block-product-filters__open-overlay').forEach(btn => {
+   if (btn.textContent.trim() === 'Filter products' || btn.textContent.includes('Filter')) {
+    const icon = btn.querySelector('svg');
+    btn.textContent = 'فیلترها';
+    if (icon) btn.prepend(icon);
+   }
+  });
+  document.querySelectorAll('.wc-block-product-filters__apply').forEach(btn => {
+   if (btn.textContent.trim() === 'Apply') btn.textContent = 'اعمال';
+  });
+ };
+ new MutationObserver(translate).observe(document.body, {subtree:true, childList:true});
+ translate();
+})();
+
 /* Woo blocks can re-render prices/counts client-side. Only replace text nodes in
  * display-only price, badge, quantity-summary and date elements. Never touch
  * attributes, input.value, JSON/Store API data, contenteditable or form controls. */
 (() => {
- const selectors = '.woocommerce-Price-amount, .wc-block-formatted-money-amount, .wc-block-components-product-price, .wc-block-mini-cart__badge, .wc-block-mini-cart__quantity-badge, .wc-block-components-order-summary-item__quantity, .product-quantity, .wp-block-post-date, time, .woocommerce-order-overview__date, .woocommerce-orders-table__cell-order-date';
+ const selectors = '.woocommerce-Price-amount, .wc-block-formatted-money-amount, .wc-block-components-product-price, .wc-block-mini-cart__badge, .wc-block-mini-cart__quantity-badge, .wc-block-components-order-summary-item__quantity, .product-quantity, .wp-block-post-date, time, .woocommerce-order-overview__date, .woocommerce-orders-table__cell-order-date, .woocommerce-breadcrumb, .wc-block-breadcrumbs, .wc-block-components-product-results-count, .woocommerce-result-count, .wc-block-components-pagination, .woocommerce-pagination, .abrang-pagination, .abrang-chips, .wc-block-product-filter-price-slider, .wc-block-product-filter-checkbox-list';
  const digits = text => text.replace(/([0-9۰-۹]),(?=[0-9۰-۹])/g, '$1٬').replace(/[0-9]/g, n => '۰۱۲۳۴۵۶۷۸۹'[n]);
  const update = () => {
   document.querySelectorAll(selectors).forEach(element => {
