@@ -195,3 +195,48 @@ Do not run demo generation on production. Site Editor overrides still require re
 - Audience/trust icons are distinct backpack/palette/briefcase and truck/shield-check/lock/headset SVGs. Section spacing uses 64/40px presets, a separate mist trust band, hover/focus states and reduced-motion support.
 - CI 40241275296 passed including all prior smoke/lifecycle checks and new computed-font, modal/accordion, geometry, square-image, digit/input-safety and overflow assertions. Three refreshed screenshots uploaded as `screenshots`. Agent cannot manually inspect artifact images because the sandbox blocks the artifact storage host; owner review remains available in PR #2 → Checks → CI → Artifacts.
 - No branch/PR changes, no production configuration or later-prompt work. Owner applies the PowerShell commands above after merging; resetting Site Editor overrides may be necessary.
+
+
+# Prompt 3
+
+Branch: `arena/012ae80b-abrang` · One PR for this whole prompt · Owner merges himself.
+
+Scope: shop/category archives, single product page, search + 404, bulk product import.
+Out of scope here (prompts 4–5): cart/checkout styling, payment gateway, shipping
+methods, real legal texts, SEO setup, deployment.
+
+Note on checks: the agent sandbox has no Docker and no PHP interpreter, so every
+runtime check is executed by GitHub Actions CI on each push. Locally the agent
+runs: `bash -n`, JSON/YAML parsing, `node --check`, and a real PHP-8 parser
+(`php-parser`) over every PHP file it writes. Pure-PHP logic that does not need
+WordPress (CSV parsing, digit normalization, row validation, the XLSX reader) is
+additionally executed locally inside a php-wasm PHP 8 runtime.
+
+## Stages
+
+- [ ] **Stage 0 — Leftover fixes from PR 2 review**
+  - mobile menu: sub-menu toggles fully inside the viewport, visible ✕ close button that works
+  - struck-through regular price: min 13px, AA-contrast muted grey, Persian digits, «تومان» not struck through twice
+  - header cart: icon + small Persian count badge only (hidden at 0), same on desktop
+  - remove the empty gap between the trust band and the footer
+  - demo fixture images match each product's name
+
+- [ ] **Stage 1 — Product data model (attributes, terms, variable demo product)**
+
+- [ ] **Stage 2 — Bulk product import from Excel/CSV + images by SKU**
+
+- [ ] **Stage 3 — Shop and category archive template**
+
+- [ ] **Stage 4 — Single product template**
+
+- [ ] **Stage 5 — Search results and 404**
+
+- [ ] **Stage 6 — Tests, screenshots, docs**
+
+## Not done (Prompt 3)
+
+_(filled in as work proceeds)_
+
+## Report (Prompt 3)
+
+_(filled in at the end)_
