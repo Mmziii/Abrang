@@ -277,11 +277,11 @@ jobs:
           cp docs/products-template.csv import/template.csv
           cp docs/products-template.xlsx import/template.xlsx
           echo "--- Import template.csv (1st) ---"
-          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import1.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::import template.csv 1st failed code=$code"; cat /tmp/import1.log | head -n 300; exit 1; fi
+          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import1.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::import template.csv 1st failed code=$code log=$(cat /tmp/import1.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/import1.log | head -n 100; echo "--- full log via warning ---"; echo "::warning::$(cat /tmp/import1.log | head -n 50 | tr '\n' '%0A' | cut -c1-1000)"; exit 1; fi
           COUNT=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r')
           echo "Total products after first import: $COUNT"
           echo "--- Import template.csv (2nd, idempotency) ---"
-          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import2.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::import template.csv 2nd failed code=$code"; cat /tmp/import2.log | head -n 300; exit 1; fi
+          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import2.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::import template.csv 2nd failed code=$code log=$(cat /tmp/import2.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/import2.log | head -n 100; exit 1; fi
           COUNT2=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r')
           echo "After second import: $COUNT2"
           [ "$COUNT" = "$COUNT2" ] || { echo "::error::idempotency failed COUNT=$COUNT COUNT2=$COUNT2"; exit 1; }
