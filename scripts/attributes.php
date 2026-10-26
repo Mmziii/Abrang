@@ -20,6 +20,42 @@ $abrang_attributes = array(
     'pack-size' => 'تعداد در بسته',
 );
 
+// Helper to ensure pa_* taxonomy is registered in this PHP request.
+// Woo's wc_register_attribute_taxonomies() reads from DB via wc_get_attribute_taxonomies()
+// which is cached in transient + object cache. After wc_create_attribute() the transient
+// is deleted, but the object cache may still hold stale data until we invalidate it.
+// We also register directly if Woo's function did not pick it up yet (same args Woo uses).
+$abrang_ensure_taxonomy = static function ( $slug, $label ) {
+    $taxonomy = 'pa_' . $slug;
+    if ( taxonomy_exists( $taxonomy ) ) {
+        return;
+    }
+    // Force cache refresh before Woo's registration.
+    delete_transient( 'wc_attribute_taxonomies' );
+    if ( class_exists( 'WC_Cache_Helper' ) ) {
+        WC_Cache_Helper::invalidate_cache_group( 'woocommerce-attributes' );
+    }
+    if ( function_exists( 'wc_register_attribute_taxonomies' ) ) {
+        wc_register_attribute_taxonomies();
+    }
+    if ( ! taxonomy_exists( $taxonomy ) ) {
+        // Direct registration fallback — same args WooCommerce uses for attribute taxonomies
+        // (public = has_archives, hierarchical false, query_var true, rewrite false).
+        register_taxonomy(
+            $taxonomy,
+            array( 'product' ),
+            array(
+                'labels'       => array( 'name' => $label ),
+                'public'       => false,
+                'hierarchical' => false,
+                'show_ui'      => false,
+                'query_var'    => true,
+                'rewrite'      => false,
+            )
+        );
+    }
+};
+
 foreach ( $abrang_attributes as $slug => $label ) {
     $existing_id = wc_attribute_taxonomy_id_by_name( $slug );
     if ( $existing_id ) {
@@ -34,6 +70,8 @@ foreach ( $abrang_attributes as $slug => $label ) {
         } else {
             WP_CLI::log( "[already done] attribute $slug" );
         }
+        // Ensure taxonomy is registered in this request even for existing attributes.
+        $abrang_ensure_taxonomy( $slug, $label );
         continue;
     }
     $result = wc_create_attribute( array(
@@ -44,13 +82,27 @@ foreach ( $abrang_attributes as $slug => $label ) {
         'has_archives' => false,
     ) );
     if ( is_wp_error( $result ) ) {
+        // Genuine already-exists race — treat as done.
+        if ( in_array( $result->get_error_code(), array( 'invalid_product_attribute_slug_already_exists', 'term_exists' ), true ) ) {
+            WP_CLI::log( "[already done] attribute $slug" );
+            $abrang_ensure_taxonomy( $slug, $label );
+            continue;
+        }
         WP_CLI::error( $result );
     }
     WP_CLI::log( "Created attribute $slug" );
+    // Immediately register the new taxonomy in this same PHP request so
+    // subsequent wp_insert_term / wp_set_object_terms / variations do not
+    // fail with "invalid taxonomy".
+    $abrang_ensure_taxonomy( $slug, $label );
 }
 
-// Ensure attribute taxonomies are registered for this request so term
-// creation below does not fail when the attributes were just created.
+// Ensure all attribute taxonomies are registered for term creation below
+// (and for the next file setup.sh will run in the same request).
+delete_transient( 'wc_attribute_taxonomies' );
+if ( class_exists( 'WC_Cache_Helper' ) ) {
+    WC_Cache_Helper::invalidate_cache_group( 'woocommerce-attributes' );
+}
 if ( function_exists( 'wc_register_attribute_taxonomies' ) ) {
     wc_register_attribute_taxonomies();
 }
@@ -66,6 +118,10 @@ $abrang_color_terms = array(
 );
 
 foreach ( $abrang_color_terms as $slug => $name ) {
+    // Ensure taxonomy exists before touching terms.
+    if ( ! taxonomy_exists( 'pa_color' ) ) {
+        $abrang_ensure_taxonomy( 'color', 'رنگ' );
+    }
     $term = get_term_by( 'slug', $slug, 'pa_color' );
     if ( $term && ! is_wp_error( $term ) ) {
         // Preserve existing terms — only mark with demo meta if it was created

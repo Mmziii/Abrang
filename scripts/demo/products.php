@@ -5,6 +5,11 @@ require_once ABSPATH . 'wp-admin/includes/media.php';
 
 // Ensure attribute taxonomies are registered for this request (setup.sh
 // calls attributes.php before this file, but direct demo.sh runs also need it).
+// Clear caches first so newly created attributes are seen.
+delete_transient( 'wc_attribute_taxonomies' );
+if ( class_exists( 'WC_Cache_Helper' ) ) {
+    WC_Cache_Helper::invalidate_cache_group( 'woocommerce-attributes' );
+}
 if ( function_exists( 'wc_register_attribute_taxonomies' ) ) {
     wc_register_attribute_taxonomies();
 }
@@ -15,6 +20,16 @@ if ( function_exists( 'wc_register_attribute_taxonomies' ) ) {
  * demo/remove.php can delete them only when unused.
  */
 $abrang_ensure_demo_term = static function ( $taxonomy, $slug, $name ) {
+    // Ensure taxonomy is registered before term lookup.
+    if ( ! taxonomy_exists( $taxonomy ) ) {
+        delete_transient( 'wc_attribute_taxonomies' );
+        if ( class_exists( 'WC_Cache_Helper' ) ) {
+            WC_Cache_Helper::invalidate_cache_group( 'woocommerce-attributes' );
+        }
+        if ( function_exists( 'wc_register_attribute_taxonomies' ) ) {
+            wc_register_attribute_taxonomies();
+        }
+    }
     $term = get_term_by( 'slug', $slug, $taxonomy );
     if ( $term && ! is_wp_error( $term ) ) {
         return $term->slug;
@@ -199,10 +214,21 @@ if ( $existing_var_id ) {
         $variable->set_tag_ids( array( (int) $tag->term_id ) );
     }
     // Attribute: pa_color with all four options, used for variations.
+    // Use term IDs for parent options as recommended (variation = true).
+    $color_term_ids = array();
+    foreach ( array_keys( $var_colors ) as $c_slug ) {
+        $t = get_term_by( 'slug', $c_slug, 'pa_color' );
+        if ( $t && ! is_wp_error( $t ) ) {
+            $color_term_ids[] = (int) $t->term_id;
+        } else {
+            // Fallback to slug if term not found yet (should not happen after attributes.php)
+            $color_term_ids[] = $c_slug;
+        }
+    }
     $attr = new WC_Product_Attribute();
     $attr->set_id( wc_attribute_taxonomy_id_by_name( 'color' ) );
     $attr->set_name( 'pa_color' );
-    $attr->set_options( array_keys( $var_colors ) );
+    $attr->set_options( $color_term_ids );
     $attr->set_position( 0 );
     $attr->set_visible( true );
     $attr->set_variation( true );
@@ -256,6 +282,14 @@ if ( $existing_var_id ) {
             $variation->save();
         }
         WP_CLI::log( "Created variation $var_sku-" . strtoupper( $slug ) . " stock {$info['stock']}" );
+    }
+    // Sync variable product so get_children() returns 4 and stock/price ranges are correct.
+    if ( class_exists( 'WC_Product_Variable' ) && method_exists( 'WC_Product_Variable', 'sync' ) ) {
+        WC_Product_Variable::sync( $variable_id );
+    } else {
+        // Fallback: sync via data store
+        $v = wc_get_product( $variable_id );
+        if ( $v ) { $v->save(); }
     }
     WP_CLI::log( "Created $var_sku" );
 }

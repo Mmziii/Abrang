@@ -56,6 +56,12 @@ if ( ! in_array( $ext, array( 'csv', 'xlsx' ), true ) ) {
 }
 
 // Ensure attribute taxonomies are registered (needed for term creation).
+// Ensure attribute taxonomies are registered (with cache clear) so term creation
+// does not fail with "invalid taxonomy" when attributes were just created.
+delete_transient( 'wc_attribute_taxonomies' );
+if ( class_exists( 'WC_Cache_Helper' ) ) {
+    WC_Cache_Helper::invalidate_cache_group( 'woocommerce-attributes' );
+}
 if ( function_exists( 'wc_register_attribute_taxonomies' ) ) {
     wc_register_attribute_taxonomies();
 }
@@ -132,6 +138,16 @@ function abrang_ensure_term( $taxonomy, $name ) {
     $name = trim( (string) $name );
     if ( '' === $name ) {
         return null;
+    }
+    // Ensure taxonomy is registered (for pa_* attributes) before term lookup.
+    if ( str_starts_with( $taxonomy, 'pa_' ) && ! taxonomy_exists( $taxonomy ) ) {
+        delete_transient( 'wc_attribute_taxonomies' );
+        if ( class_exists( 'WC_Cache_Helper' ) ) {
+            WC_Cache_Helper::invalidate_cache_group( 'woocommerce-attributes' );
+        }
+        if ( function_exists( 'wc_register_attribute_taxonomies' ) ) {
+            wc_register_attribute_taxonomies();
+        }
     }
     // For attribute taxonomies the term name is the label; slug is auto-generated.
     $existing = get_term_by( 'name', $name, $taxonomy );
