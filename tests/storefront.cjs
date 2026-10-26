@@ -327,22 +327,33 @@ async function checkPersianPrices(page) {
     await page.close();
   }
 
-  // Filter via URL returns only matching products (check via page content)
+    // Filter via URL returns only matching products (check via page content)
   {
     const page = await browser.newPage({viewport:{width:1440,height:900}});
     await page.goto('http://localhost:8080/shop/?filter_color=blue&query_type_color=or', {waitUntil:'networkidle'});
-    const content = await page.content();
-    const hasBlue = content.includes('خودکار آبی نرم');
-    const hasRed = content.includes('دفتر خط‌دار');
-    const count = await page.locator('.wc-block-product-template > li').count();
+    let content = await page.content();
+    let hasBlue = content.includes('خودکار آبی نرم');
+    let hasRed = content.includes('دفتر خط‌دار');
+    let count = await page.locator('.wc-block-product-template > li').count();
     console.log('filter debug: hasBlue='+hasBlue+' hasRed='+hasRed+' count='+count);
-    // Debug: save content for artifact on failure
-    if (!hasBlue || hasRed) {
-      require('node:fs').writeFileSync('screenshots/filter-debug.html', content.slice(0,5000));
-      console.log('filter content snippet:', content.slice(content.indexOf('خودکار')-200, content.indexOf('خودکار')+500).replace(/\n/g,' '));
+    await page.screenshot({path:'screenshots/filter-blue-1440.png', fullPage:true});
+    // Fallback to filter_pa_color if first fails (handles both WC Query and ProductQuery variants)
+    if (!hasBlue) {
+      await page.goto('http://localhost:8080/shop/?filter_pa_color=blue&query_type_color=or', {waitUntil:'networkidle'});
+      content = await page.content();
+      hasBlue = content.includes('خودکار آبی نرم');
+      hasRed = content.includes('دفتر خط‌دار');
+      count = await page.locator('.wc-block-product-template > li').count();
+      console.log('filter_pa_color debug: hasBlue='+hasBlue+' hasRed='+hasRed+' count='+count);
+      await page.screenshot({path:'screenshots/filter-pa-blue-1440.png', fullPage:true});
     }
-    assert.ok(hasBlue, 'Filter blue should contain blue product خودکار آبی نرم');
-    assert.ok(!hasRed, 'Filter blue should NOT contain red product دفتر خط‌دار');
+    if (!hasBlue || hasRed) {
+      require('node:fs').writeFileSync('screenshots/filter-debug.html', content.slice(0,8000));
+      try { require('node:fs').writeFileSync('screenshots/filter-debug.txt', 'hasBlue='+hasBlue+' hasRed='+hasRed+' count='+count+'\n'+content.slice(0,4000)); } catch {}
+      console.log('filter content snippet:', content.slice(0,1000).replace(/\n/g,' '));
+    }
+    assert.ok(hasBlue, 'Filter blue should contain blue product خودکار آبی نرم count='+count+' hasBlue='+hasBlue+' hasRed='+hasRed);
+    assert.ok(!hasRed, 'Filter blue should NOT contain red product دفتر خط‌دار count='+count+' hasRed='+hasRed);
     await page.close();
   }
 
