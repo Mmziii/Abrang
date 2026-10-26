@@ -221,7 +221,7 @@ add_filter( 'woocommerce_get_availability', static function ( $availability, $pr
 
 /** Search normalization — Arabic ي/ك → Persian ی/ک for query and display, no DB changes. */
 add_action( 'pre_get_posts', static function ( $query ) {
-    if ( is_admin() || ! $query->is_search() || ! $query->is_main_query() ) {
+    if ( is_admin() || ! $query->is_search() ) {
         return;
     }
     $s = $query->get( 's' );
