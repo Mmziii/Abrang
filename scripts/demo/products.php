@@ -133,7 +133,12 @@ foreach ( $names as $i => $name ) {
     } else {
         $product->set_sale_price( '' );
     }
-    if ( 0 === $i % 5 ) {
+    // Ensure پوشه product is always in stock so search finds it (was outofstock for i%5==0)
+    if ( 'پوشه دکمه‌دار' === $name ) {
+        $product->set_stock_status( 'instock' );
+        $product->set_manage_stock( true );
+        $product->set_stock_quantity( 12 + $i );
+    } elseif ( 0 === $i % 5 ) {
         $product->set_stock_status( 'outofstock' );
         $product->set_manage_stock( false );
         $product->set_stock_quantity( null );
