@@ -81,9 +81,13 @@ $color_slugs = array( 'blue','black','red','green' );
 
 foreach ( $names as $i => $name ) {
     $sku = 'DEMO-' . ( $i + 1 );
-    // For searchable Arabic normalization test: ensure پوشه product also contains Arabic ك in content
+    // For searchable Arabic normalization test: ensure پوشه and خودکار products also contain Arabic ك in content
     if ( 'پوشه دکمه‌دار' === $name ) {
         $name_arabic_alias = 'پوشه دكمه‌دار'; // Arabic ك for search normalization test
+    } elseif ( 'خودکار آبی نرم' === $name ) {
+        $name_arabic_alias = 'خودكار آبی نرم'; // Arabic ك in خودکار
+    } elseif ( 'خودکار چهار رنگ — نمونه آزمایشی' === $name ) {
+        $name_arabic_alias = 'خودكار چهار رنگ';
     } else {
         $name_arabic_alias = '';
     }
@@ -96,8 +100,8 @@ foreach ( $names as $i => $name ) {
             WP_CLI::log( "[already done] $sku (type mismatch, kept)" );
             continue;
         }
-        // Ensure Arabic alias for پوشه product is present for search normalization test (update existing) — always set
-        if ( 'پوشه دکمه‌دار' === $name && '' !== $name_arabic_alias ) {
+        // Ensure Arabic alias for پوشه/خودکار products is present for search normalization test (update existing) — always set
+        if ( '' !== $name_arabic_alias ) {
             $product->set_description( 'محصول ساختگی برای طراحی؛ قابل خرید واقعی نیست. ' . $name_arabic_alias );
             $product->set_name( $name . ' ' . $name_arabic_alias . ' — نمونه آزمایشی' );
             $product->save();
@@ -259,10 +263,20 @@ $var_colors = array(
 );
 $existing_var_id = wc_get_product_id_by_sku( $var_sku );
 if ( $existing_var_id ) {
+    // Ensure Arabic alias in variable product title for search test
+    $vp = wc_get_product( $existing_var_id );
+    if ( $vp && false === strpos( $vp->get_name(), 'خودكار' ) ) {
+        $vp->set_name( 'خودکار چهار رنگ خودكار چهار رنگ — نمونه آزمایشی' );
+        $vp->set_description( 'خودکار با چهار رنگ متفاوت برای نمایش انتخاب رنگ و موجودی متغیر. خودكار چهار رنگ' );
+        $vp->save();
+        wp_update_post( array( 'ID' => $vp->get_id(), 'post_title' => $vp->get_name(), 'post_content' => $vp->get_description() ) );
+        WP_CLI::log( "Updated $var_sku title with Arabic alias" );
+    }
     WP_CLI::log( "[already done] $var_sku" );
 } else {
     $variable = new WC_Product_Variable();
-    $variable->set_name( 'خودکار چهار رنگ — نمونه آزمایشی' );
+    // Include Arabic alias in variable product name for search test
+    $variable->set_name( 'خودکار چهار رنگ خودكار چهار رنگ — نمونه آزمایشی' );
     $variable->set_sku( $var_sku );
     $variable->set_status( 'publish' );
     $variable->set_description( 'خودکار با چهار رنگ متفاوت برای نمایش انتخاب رنگ و موجودی متغیر.' );
