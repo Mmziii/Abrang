@@ -31,27 +31,41 @@ if ( ! defined( 'ABSPATH' ) ) {
 // ---------------------------------------------------------------------------
 global $args, $argv;
 $cli_args = array();
-if ( isset( $args ) && is_array( $args ) && ! empty( $args ) ) {
-    $cli_args = $args;
-} elseif ( isset( $argv ) && is_array( $argv ) && count( $argv ) > 1 ) {
-    // $argv[0] is the script file, rest are args
-    $cli_args = array_slice( $argv, 1 );
-    // If wp eval-file passed --, the first arg after -- is the file
-    if ( isset( $cli_args[0] ) && $cli_args[0] === '--' ) {
-        $cli_args = array_slice( $cli_args, 1 );
-    }
-} elseif ( getenv( 'IMPORT_FILE' ) ) {
+// Prefer IMPORT_FILE env (set by wrapper) — most reliable for wp eval-file
+if ( getenv( 'IMPORT_FILE' ) ) {
     $cli_args = array( getenv( 'IMPORT_FILE' ) );
-    // Also add any --dry-run/--skip-invalid from getenv
     $extra = getenv( 'IMPORT_FLAGS' );
     if ( $extra ) {
         $cli_args = array_merge( $cli_args, preg_split( '/\s+/', trim( $extra ) ) );
     }
-} elseif ( isset( $_SERVER['argv'] ) && is_array( $_SERVER['argv'] ) && count( $_SERVER['argv'] ) > 1 ) {
-    $cli_args = array_slice( $_SERVER['argv'], 1 );
-    if ( isset( $cli_args[0] ) && $cli_args[0] === '--' ) {
-        $cli_args = array_slice( $cli_args, 1 );
+} elseif ( isset( $args ) && is_array( $args ) && ! empty( $args ) ) {
+    $cli_args = $args;
+} elseif ( isset( $argv ) && is_array( $argv ) && count( $argv ) > 1 ) {
+    // $argv[0] is the script file, rest are args
+    // For wp eval-file, $argv may be ['wp','eval-file','/path/to/php','--','/import/file.csv']
+    $tmp = array_slice( $argv, 1 );
+    if ( isset( $tmp[0] ) && $tmp[0] === 'eval-file' ) {
+        $tmp = array_slice( $tmp, 1 );
     }
+    if ( isset( $tmp[0] ) && str_ends_with( $tmp[0], '.php' ) ) {
+        $tmp = array_slice( $tmp, 1 );
+    }
+    if ( isset( $tmp[0] ) && $tmp[0] === '--' ) {
+        $tmp = array_slice( $tmp, 1 );
+    }
+    $cli_args = $tmp;
+} elseif ( isset( $_SERVER['argv'] ) && is_array( $_SERVER['argv'] ) && count( $_SERVER['argv'] ) > 1 ) {
+    $tmp = array_slice( $_SERVER['argv'], 1 );
+    if ( isset( $tmp[0] ) && $tmp[0] === 'eval-file' ) {
+        $tmp = array_slice( $tmp, 1 );
+    }
+    if ( isset( $tmp[0] ) && str_ends_with( $tmp[0], '.php' ) ) {
+        $tmp = array_slice( $tmp, 1 );
+    }
+    if ( isset( $tmp[0] ) && $tmp[0] === '--' ) {
+        $tmp = array_slice( $tmp, 1 );
+    }
+    $cli_args = $tmp;
 }
 $file     = $cli_args[0] ?? null;
 $dry_run  = in_array( '--dry-run', $cli_args, true );
