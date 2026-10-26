@@ -92,3 +92,56 @@ document.querySelectorAll('.wp-block-woocommerce-product-search').forEach(search
  }).observe(document.body, {subtree:true, childList:true, characterData:true});
  update();
 })();
+
+/* Single product sticky bar — shows price + add-to-cart after the main button scrolls out. */
+(() => {
+ const bar = document.querySelector('.abrang-sticky-bar');
+ if (!bar) return;
+ const mainSummary = document.querySelector('.abrang-single-summary');
+ const mainButton = mainSummary?.querySelector('.single_add_to_cart_button, .wc-block-components-product-add-to-cart-button, button[name=\"add-to-cart\"]');
+ const mainPrice = mainSummary?.querySelector('.woocommerce-product-price, .wc-block-components-product-price, .price');
+ const footer = document.querySelector('footer');
+ if (!mainButton || !mainPrice) return;
+ const barPrice = bar.querySelector('.abrang-sticky-price');
+ const barButton = bar.querySelector('.abrang-sticky-button');
+ const sync = () => {
+  if (barPrice) barPrice.innerHTML = mainPrice.innerHTML;
+  if (barButton) {
+   const existing = barButton.querySelector('button');
+   if (!existing) {
+    const clone = mainButton.cloneNode(true);
+    clone.addEventListener('click', () => mainButton.click());
+    // Preserve disabled state
+    const updateDisabled = () => { clone.disabled = mainButton.disabled; clone.setAttribute('aria-disabled', String(mainButton.disabled)); };
+    new MutationObserver(updateDisabled).observe(mainButton, {attributes:true, attributeFilter:['disabled','class']});
+    updateDisabled();
+    barButton.appendChild(clone);
+   } else {
+    existing.disabled = mainButton.disabled;
+   }
+  }
+ };
+ // Keep price in sync when variations change the price
+ new MutationObserver(sync).observe(mainPrice, {subtree:true, childList:true, characterData:true});
+ sync();
+ let buttonVisible = true;
+ let footerVisible = false;
+ const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+   if (entry.target === mainButton) buttonVisible = entry.isIntersecting;
+   if (entry.target === footer) footerVisible = entry.isIntersecting;
+   const show = !buttonVisible && !footerVisible && window.innerWidth <= 781;
+   // Only on mobile per spec — desktop has normal flow, but we also support small desktop?
+   // Spec says mobile: sticky bottom bar. So enable only on mobile.
+   bar.classList.toggle('is-visible', show && window.matchMedia('(max-width: 781px)').matches);
+   bar.setAttribute('aria-hidden', String(!show));
+  });
+ }, {threshold:0});
+ observer.observe(mainButton);
+ if (footer) observer.observe(footer);
+ // Re-evaluate on resize
+ matchMedia('(max-width: 781px)').addEventListener('change', () => {
+  const show = !buttonVisible && !footerVisible;
+  bar.classList.toggle('is-visible', show && window.matchMedia('(max-width: 781px)').matches);
+ });
+})();

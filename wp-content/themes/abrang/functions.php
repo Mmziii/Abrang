@@ -148,6 +148,56 @@ add_filter( 'woocommerce_default_catalog_orderby_options', static function ( $op
     return $options;
 } );
 
+/** Brand link for the single product summary — links to the shop filtered by brand. */
+add_shortcode( 'abrang_brand_link', static function () {
+    global $product;
+    if ( ! $product ) {
+        $product = wc_get_product( get_queried_object_id() );
+    }
+    if ( ! $product ) {
+        return '';
+    }
+    $terms = get_the_terms( $product->get_id(), 'pa_brand' );
+    if ( empty( $terms ) || is_wp_error( $terms ) ) {
+        return '';
+    }
+    $term = $terms[0];
+    // Filtered shop URL — `filter_brand` is the query var used by product filters.
+    $url = add_query_arg( array( 'filter_brand' => $term->slug ), wc_get_page_permalink( 'shop' ) );
+    // Fallback to the attribute query used by the classic filter: `filter_pa_brand`.
+    // Both are accepted; the new filter block reads `filter_brand`.
+    return sprintf( '<div class="abrang-brand"><a href="%s">%s: %s</a></div>', esc_url( $url ), esc_html__( 'برند', 'abrang' ), esc_html( $term->name ) );
+} );
+
+/** Persian stock messages — the block renders availability text that we translate. */
+add_filter( 'woocommerce_get_availability', static function ( $availability, $product ) {
+    if ( is_admin() ) {
+        return $availability;
+    }
+    $stock_qty = $product->get_stock_quantity();
+    $is_managed = $product->managing_stock();
+    if ( $product->is_in_stock() ) {
+        if ( $is_managed && null !== $stock_qty && $stock_qty <= 5 && $stock_qty > 0 ) {
+            $availability['availability'] = sprintf( 'تنها %s عدد باقی مانده', abrang_display_digits( (string) $stock_qty ) );
+            $availability['class'] = 'abrang-stock-low';
+        } else {
+            $availability['availability'] = 'موجود';
+            $availability['class'] = 'in-stock';
+        }
+    } else {
+        $availability['availability'] = 'ناموجود';
+        $availability['class'] = 'out-of-stock';
+    }
+    return $availability;
+}, 10, 2 );
+
+/** Variation selector — with core blocks we use the standard dropdown, styled
+ * cleanly. The spec allows this fallback when a swatch block is not available
+ * without a plugin; the choice is documented here and in the template.
+ * No extra plugin is loaded. The dropdown is given a comfortable min-height
+ * and indigo focus ring via CSS.
+ */
+
 /** Inject correct attribute IDs into the archive filter blocks (brand = برند, color = رنگ). */
 add_filter( 'render_block_data', static function ( $parsed ) {
     if ( ! isset( $parsed['blockName'] ) ) {

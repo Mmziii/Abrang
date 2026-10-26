@@ -242,7 +242,13 @@ additionally executed locally inside a php-wasm PHP 8 runtime.
   - grid `.abrang-products` 2 cols 360–781, 3 cols 782–1199, 4 cols ≥1200 via `style.css` (update to `max-width:1199`), pagination `abrang-pagination` 44px, `perPage:16`, Persian digits via walker, 16 per page
   - empty state Persian «محصولی با این فیلترها یافت نشد» + link `/shop/` + clear button via `product-collection-no-results`; `php-parser` + `node --check` pass
 
-- [ ] **Stage 4 — Single product template**
+- [x] **Stage 4 — Single product template** — `templates/single-product.html`, `functions.php` (brand link, Persian stock, variation note), `style.css` (single layout, trust-mini, sticky bar), `assets/storefront.js` (sticky bar, filter drawer translation)
+  - layout desktop gallery right (RTL) `50%` + summary left, mobile gallery then summary via `order` + flex `column`; gallery `woocommerce/product-image-gallery` main+thumbs swipeable+zoom (Woo built-in only)
+  - summary: breadcrumbs, title, brand `[abrang_brand_link]` → `/shop/?filter_brand=slug`, price sale+regular, stock «موجود/تنها X عدد باقی مانده/ناموجود» via `woocommerce_get_availability` + `abrang_display_digits`, short desc, variation via `woocommerce/add-to-cart-form` (standard dropdown styled cleanly — swatch requires plugin, documented in `functions.php`), quantity + «افزودن به سبد خرید» indigo full-width mobile, disabled when out-of-stock
+  - trust strip زیر دکمه: ارسال/ضمانت/پرداخت با همان SVGهای صفحهٔ نخست (20px)
+  - mobile sticky bar `.abrang-sticky-bar` fixed bottom, price+clone button appears after main button out of view via `IntersectionObserver`, hides when footer visible, no layout shift, only on ≤781px
+  - tabs `woocommerce/product-details` «توضیحات/مشخصات/نظرات» + `woocommerce_review_rating_verification_required=yes` idempotent in `setup.sh` (verified buyers only)
+  - related «محصولات مشابه» same category 4 items via `product-collection` related `categories|tags` + `abrang-products` cards; `php-parser`+`node --check` pass
 
 - [ ] **Stage 5 — Search results and 404**
 

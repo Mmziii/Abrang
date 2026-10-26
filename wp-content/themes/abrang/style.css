@@ -203,4 +203,47 @@ body:has(main.abrang-home) .abrang-footer {margin-top:0!important}
 /* Ensure filter checkboxes and price slider use design tokens */
 .abrang-archive .wc-block-product-filter-checkbox-list label {font-size:14px;line-height:1.6}
 .abrang-archive .wc-block-product-filter-price-slider {margin-block:12px}
+
+/* Single product — gallery on the right (RTL), summary on the left; mobile: gallery then summary. */
+.abrang-single {padding-top:16px}
+.abrang-single-layout .abrang-single-columns {gap:40px;align-items:start}
+.abrang-single-gallery .woocommerce-product-gallery {width:100%}
+.abrang-single-gallery .woocommerce-product-gallery__image {border-radius:12px;overflow:hidden}
+.abrang-single-gallery img {border-radius:12px}
+.abrang-single-summary .wp-block-post-title {font-size:clamp(24px,3vw,32px);line-height:1.4;margin:0 0 8px}
+.abrang-brand a {color:var(--wp--preset--color--indigo);text-decoration:none;font-weight:600;font-size:14px}
+.abrang-brand a:hover {text-decoration:underline}
+.abrang-stock {font-size:14px;font-weight:600;margin:8px 0}
+.abrang-stock.in-stock {color:var(--wp--preset--color--teal)}
+.abrang-stock.abrang-stock-low {color:var(--wp--preset--color--ochre)}
+.abrang-stock.out-of-stock {color:var(--wp--preset--color--coral)}
+.abrang-single-summary .woocommerce-product-price {font-size:20px}
+.abrang-single-summary .price {gap:8px;flex-wrap:wrap}
+.abrang-single-summary .single_add_to_cart_button,.abrang-single-summary .wc-block-components-product-add-to-cart-button {background:var(--wp--preset--color--indigo)!important;color:var(--wp--preset--color--paper)!important;border:1px solid var(--wp--preset--color--indigo)!important;border-radius:8px!important;min-height:48px;font-weight:600;width:100%}
+.abrang-single-summary .single_add_to_cart_button:disabled,.abrang-single-summary .wc-block-components-product-add-to-cart-button:disabled {opacity:.6;cursor:not-allowed}
+.abrang-single-summary .quantity input {min-height:44px;border:1px solid var(--wp--preset--color--mist);border-radius:8px;text-align:center}
+.abrang-single-summary .variations select {min-height:44px;border:1px solid var(--wp--preset--color--mist);border-radius:8px;padding-inline:12px;font:inherit;background:var(--wp--preset--color--paper)}
+.abrang-trust-mini {gap:16px;padding:16px;border:1px solid var(--wp--preset--color--mist);border-radius:12px;background:var(--wp--preset--color--paper);margin-top:16px}
+.abrang-trust-mini-item {display:flex;align-items:center;gap:8px;font-size:13px;color:var(--wp--preset--color--ink)}
+.abrang-trust-mini-item svg {color:var(--wp--preset--color--indigo);flex-shrink:0}
+.abrang-product-details {margin-top:40px}
+.abrang-product-details .woocommerce-tabs ul.tabs {display:flex;gap:24px;list-style:none;padding:0;border-bottom:1px solid var(--wp--preset--color--mist);margin:0 0 24px}
+.abrang-product-details .woocommerce-tabs ul.tabs li a {display:block;padding:12px 0;text-decoration:none;color:var(--wp--preset--color--ink);border-bottom:2px solid transparent}
+.abrang-product-details .woocommerce-tabs ul.tabs li.active a {color:var(--wp--preset--color--indigo);border-color:var(--wp--preset--color--indigo);font-weight:600}
+.abrang-related {margin-top:48px}
+.abrang-related h2 {font-size:22px}
+@media(max-width:781px){
+ .abrang-single-columns {flex-direction:column}
+ .abrang-single-gallery {order:1}
+ .abrang-single-summary {order:2}
+ .abrang-single-summary .single_add_to_cart_button {width:100%}
+}
+/* Sticky bottom bar — price + add-to-cart, appears after main button scrolls out. */
+.abrang-sticky-bar {position:fixed;bottom:0;left:0;right:0;z-index:999;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px clamp(16px,4vw,48px);background:var(--wp--preset--color--paper);border-top:1px solid var(--wp--preset--color--mist);box-shadow:0 -4px 16px rgba(0,0,0,.08);transform:translateY(100%);transition:transform .2s ease;pointer-events:none}
+.abrang-sticky-bar.is-visible {transform:translateY(0);pointer-events:auto}
+.abrang-sticky-bar .abrang-sticky-price {font-weight:700;color:var(--wp--preset--color--ink)}
+.abrang-sticky-bar .abrang-sticky-button .single_add_to_cart_button {min-height:44px;padding-inline:20px;white-space:nowrap}
+@media(max-width:781px){
+ .abrang-sticky-bar {padding:10px 16px}
+}
 @media(prefers-reduced-motion:reduce){.abrang-card{transition:none}.abrang-card:hover,.abrang-card:focus-visible{transform:none}}
