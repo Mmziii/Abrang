@@ -254,6 +254,14 @@ add_filter( 'request', static function ( $vars ) {
     }
     return $vars;
 } );
+add_filter( 'posts_search', static function ( $search, $wp_query ) {
+    if ( is_admin() || '' === $search ) {
+        return $search;
+    }
+    // Normalize Arabic ي/ك in the generated SQL LIKE as a last resort (covers product-collection secondary queries)
+    $search = strtr( $search, array( 'ي' => 'ی', 'ك' => 'ک' ) );
+    return $search;
+}, 10, 2 );
 add_filter( 'get_search_query', static function ( $query ) {
     if ( is_admin() || ! is_string( $query ) ) {
         return $query;
