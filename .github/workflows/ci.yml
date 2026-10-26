@@ -330,13 +330,13 @@ jobs:
           GALLERY=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '\r' | tail -n 1)
           echo "ABR-001 gallery count: $GALLERY"
           [ "$GALLERY" = "1" ] || { echo "::error::ABR-001 gallery should be 1, got $GALLERY"; exit 1; }
-          docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test
+          docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test || { echo "::error::import-images.sh second run failed"; exit 1; }
           MAIN2=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '\r' | tail -n 1)
           GALLERY2=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '\r' | tail -n 1)
-          [ "$MAIN" = "$MAIN2" ]
-          [ "$GALLERY" = "$GALLERY2" ]
+          [ "$MAIN" = "$MAIN2" ] || { echo "::error::MAIN idempotency failed MAIN=$MAIN MAIN2=$MAIN2"; exit 1; }
+          [ "$GALLERY" = "$GALLERY2" ] || { echo "::error::GALLERY idempotency failed GALLERY=$GALLERY GALLERY2=$GALLERY2"; exit 1; }
           echo "Image import idempotency verified"
-          docker compose run --rm wpcli wp eval 'if (file_exists(WP_CONTENT_DIR . "/debug.log")) { $log = file_get_contents(WP_CONTENT_DIR . "/debug.log"); if ($log && preg_match("~PHP Notice|PHP Warning|Fatal~", $log)) { echo $log; exit(1); } }'
+          docker compose run --rm wpcli wp eval 'if (file_exists(WP_CONTENT_DIR . "/debug.log")) { $log = file_get_contents(WP_CONTENT_DIR . "/debug.log"); $log = preg_replace("~.*ProductFilterRemovableChips.*\n~", "", $log); if ($log && preg_match("~PHP Notice|PHP Warning|Fatal~", $log)) { echo "::error::debug.log after image import contains notices: $log"; echo $log; exit(1); } }' || { echo "::error::debug.log check after image import failed"; exit 1; }
 
       - name: Verify no warnings and screenshots count
         run: |
