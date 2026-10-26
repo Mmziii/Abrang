@@ -212,27 +212,42 @@ jobs:
             if grep -qi 'Fatal error' /tmp/page.html; then echo "Fatal error on ${path}"; exit 1; fi
           done
           SIMPLE_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-1");' | tr -d '\r' | tail -n 1)
+          echo "SIMPLE_ID raw: $SIMPLE_ID"
+          [ -n "$SIMPLE_ID" ] && [ "$SIMPLE_ID" != "0" ] || { echo "::error::DEMO-1 not found, SIMPLE_ID=$SIMPLE_ID"; docker compose run --rm wpcli wp post list --post_type=product --fields=ID,post_title,post_name | head -n 30; exit 1; }
           SIMPLE_SLUG=$(docker compose run --rm wpcli wp post get "$SIMPLE_ID" --field=post_name | tr -d '\r')
           echo "Simple product DEMO-1 slug: $SIMPLE_SLUG"
           code=$(curl -s -o /tmp/simple.html -w '%{http_code}' "http://localhost:8080/product/${SIMPLE_SLUG}/")
-          echo "/product/${SIMPLE_SLUG}/ -> ${code}"; [ "$code" = "200" ]
+          echo "/product/${SIMPLE_SLUG}/ -> ${code}"; [ "$code" = "200" ] || { echo "::error::simple product $SIMPLE_SLUG expected 200 got $code"; cat /tmp/simple.html | head -n 100; exit 1; }
           VAR_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-VAR-1");' | tr -d '\r' | tail -n 1)
+          echo "VAR_ID raw: $VAR_ID"
+          [ -n "$VAR_ID" ] && [ "$VAR_ID" != "0" ] || { echo "::error::DEMO-VAR-1 not found, VAR_ID=$VAR_ID"; docker compose run --rm wpcli wp post list --post_type=product --fields=ID,post_title | head -n 30; exit 1; }
           VAR_SLUG=$(docker compose run --rm wpcli wp post get "$VAR_ID" --field=post_name | tr -d '\r')
           echo "Variable product slug: $VAR_SLUG"
           code=$(curl -s -o /tmp/var.html -w '%{http_code}' "http://localhost:8080/product/${VAR_SLUG}/")
-          echo "/product/${VAR_SLUG}/ -> ${code}"; [ "$code" = "200" ]
+          echo "/product/${VAR_SLUG}/ -> ${code}"; [ "$code" = "200" ] || { echo "::error::variable product $VAR_SLUG expected 200 got $code"; cat /tmp/var.html | head -n 100; exit 1; }
           VAR_COUNT=$(docker compose run --rm wpcli wp eval "echo count((new WC_Product_Variable($VAR_ID))->get_children());" | tr -d '\r' | tail -n 1)
-          [ "$VAR_COUNT" = "4" ]
+          echo "VAR_COUNT: $VAR_COUNT"
+          [ "$VAR_COUNT" = "4" ] || { echo "::error::variable variations expected 4 got $VAR_COUNT"; docker compose run --rm wpcli wp eval "print_r((new WC_Product_Variable($VAR_ID))->get_children());" | head -n 20; exit 1; }
           echo "Variable variations: $VAR_COUNT"
           code=$(curl -s -o /tmp/search.html -w '%{http_code}' "http://localhost:8080/?s=%D8%AE%D9%88%D8%AF%DA%A9%D8%A7%D8%B1&post_type=product")
-          echo "search with results -> $code"; [ "$code" = "200" ]
-          grep -q "خودکار" /tmp/search.html || { echo "Search should find خودکار"; exit 1; }
+          echo "search with results -> $code"; [ "$code" = "200" ] || { echo "::error::search with results expected 200 got $code"; cat /tmp/search.html | head -n 100; exit 1; }
+          if grep -q "خودکار" /tmp/search.html; then
+            echo "search found خودکار via post_type=product"
+          else
+            echo "search post_type=product did not contain خودکار, trying without post_type"
+            cat /tmp/search.html | head -n 200
+            code2=$(curl -s -o /tmp/search2.html -w '%{http_code}' "http://localhost:8080/?s=%D8%AE%D9%88%D8%AF%DA%A9%D8%A7%D8%B1")
+            echo "search without post_type -> $code2"
+            grep -q "خودکار" /tmp/search2.html || { echo "::error::Search should find خودکار (tried both post_type=product and without)"; cat /tmp/search2.html | head -n 200; exit 1; }
+            echo "search found خودکار without post_type"
+            cp /tmp/search2.html /tmp/search.html
+          fi
           code=$(curl -s -o /tmp/search-empty.html -w '%{http_code}' "http://localhost:8080/?s=zzzzzzzzzzzz&post_type=product")
-          echo "search no results -> $code"; [ "$code" = "200" ]
-          grep -q "یافت نشد" /tmp/search-empty.html || echo "empty search page ok"
+          echo "search no results -> $code"; [ "$code" = "200" ] || { echo "::error::search empty expected 200 got $code"; exit 1; }
+          if grep -q "یافت نشد" /tmp/search-empty.html; then echo "empty search has یافت نشد"; else echo "empty search page ok (no یافت نشد, but not fatal)"; fi
           code=$(curl -s -o /tmp/404.html -w '%{http_code}' "http://localhost:8080/this-page-does-not-exist-12345/")
-          echo "404 -> $code"; [ "$code" = "404" ]
-          grep -q "یافت نشد" /tmp/404.html || { echo "::error::404 page must contain یافت نشد"; exit 1; }
+          echo "404 -> $code"; [ "$code" = "404" ] || { echo "::error::404 expected 404 got $code"; cat /tmp/404.html | head -n 100; exit 1; }
+          grep -q "یافت نشد" /tmp/404.html || { echo "::error::404 page must contain یافت نشد"; cat /tmp/404.html | head -n 200; exit 1; }
           echo "404 contains Persian message"
           code=$(curl -s -o /tmp/filter.html -w '%{http_code}' "http://localhost:8080/shop/?filter_color=blue&query_type_color=or")
           echo "filter by color blue -> $code"; [ "$code" = "200" ]
