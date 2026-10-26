@@ -42,6 +42,10 @@ vendor/
 *.tmp
 *~
 
+# --- Bulk import staging folder (mounted read-only into wpcli) -------------------
+/import/*
+!/import/README.txt
+
 # --- OS & editor junk ------------------------------------------------------------
 .DS_Store
 Thumbs.db

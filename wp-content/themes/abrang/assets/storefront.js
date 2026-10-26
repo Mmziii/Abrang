@@ -48,11 +48,29 @@ document.querySelectorAll('.wp-block-woocommerce-product-search').forEach(search
  });
 });
 
+/* Filter drawer label — ensure the mobile overlay button is Persian. */
+(() => {
+ const translate = () => {
+  document.querySelectorAll('.wc-block-product-filters__open-overlay').forEach(btn => {
+   if (btn.textContent.trim() === 'Filter products' || btn.textContent.includes('Filter')) {
+    const icon = btn.querySelector('svg');
+    btn.textContent = 'فیلترها';
+    if (icon) btn.prepend(icon);
+   }
+  });
+  document.querySelectorAll('.wc-block-product-filters__apply').forEach(btn => {
+   if (btn.textContent.trim() === 'Apply') btn.textContent = 'اعمال';
+  });
+ };
+ new MutationObserver(translate).observe(document.body, {subtree:true, childList:true});
+ translate();
+})();
+
 /* Woo blocks can re-render prices/counts client-side. Only replace text nodes in
  * display-only price, badge, quantity-summary and date elements. Never touch
  * attributes, input.value, JSON/Store API data, contenteditable or form controls. */
 (() => {
- const selectors = '.woocommerce-Price-amount, .wc-block-formatted-money-amount, .wc-block-components-product-price, .wc-block-mini-cart__badge, .wc-block-mini-cart__quantity-badge, .wc-block-components-order-summary-item__quantity, .product-quantity, .wp-block-post-date, time, .woocommerce-order-overview__date, .woocommerce-orders-table__cell-order-date';
+ const selectors = '.woocommerce-Price-amount, .wc-block-formatted-money-amount, .wc-block-components-product-price, .wc-block-mini-cart__badge, .wc-block-mini-cart__quantity-badge, .wc-block-components-order-summary-item__quantity, .product-quantity, .wp-block-post-date, time, .woocommerce-order-overview__date, .woocommerce-orders-table__cell-order-date, .woocommerce-breadcrumb, .wc-block-breadcrumbs, .wc-block-components-product-results-count, .woocommerce-result-count, .wc-block-components-pagination, .woocommerce-pagination, .abrang-pagination, .abrang-chips, .wc-block-product-filter-price-slider, .wc-block-product-filter-checkbox-list';
  const digits = text => text.replace(/([0-9۰-۹]),(?=[0-9۰-۹])/g, '$1٬').replace(/[0-9]/g, n => '۰۱۲۳۴۵۶۷۸۹'[n]);
  const update = () => {
   document.querySelectorAll(selectors).forEach(element => {
@@ -73,4 +91,57 @@ document.querySelectorAll('.wp-block-woocommerce-product-search').forEach(search
   requestAnimationFrame(() => { scheduled = false; update(); });
  }).observe(document.body, {subtree:true, childList:true, characterData:true});
  update();
+})();
+
+/* Single product sticky bar — shows price + add-to-cart after the main button scrolls out. */
+(() => {
+ const bar = document.querySelector('.abrang-sticky-bar');
+ if (!bar) return;
+ const mainSummary = document.querySelector('.abrang-single-summary');
+ const mainButton = mainSummary?.querySelector('.single_add_to_cart_button, .wc-block-components-product-add-to-cart-button, button[name=\"add-to-cart\"]');
+ const mainPrice = mainSummary?.querySelector('.woocommerce-product-price, .wc-block-components-product-price, .price');
+ const footer = document.querySelector('footer');
+ if (!mainButton || !mainPrice) return;
+ const barPrice = bar.querySelector('.abrang-sticky-price');
+ const barButton = bar.querySelector('.abrang-sticky-button');
+ const sync = () => {
+  if (barPrice) barPrice.innerHTML = mainPrice.innerHTML;
+  if (barButton) {
+   const existing = barButton.querySelector('button');
+   if (!existing) {
+    const clone = mainButton.cloneNode(true);
+    clone.addEventListener('click', () => mainButton.click());
+    // Preserve disabled state
+    const updateDisabled = () => { clone.disabled = mainButton.disabled; clone.setAttribute('aria-disabled', String(mainButton.disabled)); };
+    new MutationObserver(updateDisabled).observe(mainButton, {attributes:true, attributeFilter:['disabled','class']});
+    updateDisabled();
+    barButton.appendChild(clone);
+   } else {
+    existing.disabled = mainButton.disabled;
+   }
+  }
+ };
+ // Keep price in sync when variations change the price
+ new MutationObserver(sync).observe(mainPrice, {subtree:true, childList:true, characterData:true});
+ sync();
+ let buttonVisible = true;
+ let footerVisible = false;
+ const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+   if (entry.target === mainButton) buttonVisible = entry.isIntersecting;
+   if (entry.target === footer) footerVisible = entry.isIntersecting;
+   const show = !buttonVisible && !footerVisible && window.innerWidth <= 781;
+   // Only on mobile per spec — desktop has normal flow, but we also support small desktop?
+   // Spec says mobile: sticky bottom bar. So enable only on mobile.
+   bar.classList.toggle('is-visible', show && window.matchMedia('(max-width: 781px)').matches);
+   bar.setAttribute('aria-hidden', String(!show));
+  });
+ }, {threshold:0});
+ observer.observe(mainButton);
+ if (footer) observer.observe(footer);
+ // Re-evaluate on resize
+ matchMedia('(max-width: 781px)').addEventListener('change', () => {
+  const show = !buttonVisible && !footerVisible;
+  bar.classList.toggle('is-visible', show && window.matchMedia('(max-width: 781px)').matches);
+ });
 })();

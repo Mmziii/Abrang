@@ -89,6 +89,9 @@ services:
       - ./wp-content/themes/abrang:/var/www/html/wp-content/themes/abrang
       # Provisioning scripts, read-only (run: bash /scripts/setup.sh).
       - ./scripts:/scripts:ro
+      # Bulk-import staging folder — owner copies CSV/XLSX and image folders
+      # here on the host (./import); read-only inside the container as /import.
+      - ./import:/import:ro
 
 # Named volumes: survive `docker compose down`, deleted only by `down -v`.
 volumes:

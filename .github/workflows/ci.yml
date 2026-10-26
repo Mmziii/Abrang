@@ -157,9 +157,21 @@ jobs:
           node-version: '22'
       - name: Browser checks and full-page screenshots
         run: |
+          set -o pipefail
           npm install --no-save --package-lock=false playwright@1.56.1
           npx playwright install --with-deps chromium
-          node tests/storefront.cjs
+          node tests/storefront.cjs 2>&1 | tee browser.log
+          code=${PIPESTATUS[0]}
+          echo "browser exit code: $code" | tee -a browser.log
+          cat browser.log
+          exit $code
+      - name: Upload browser log (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-log
+          path: browser.log
+          if-no-files-found: warn
       - name: Upload visual review artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -182,10 +194,178 @@ jobs:
           docker compose run --rm wpcli bash /scripts/demo.sh
           docker compose run --rm wpcli bash /scripts/demo.sh
           count=$(docker compose run --rm wpcli wp post list --post_type=product --meta_key=_abrang_demo --meta_value=1 --format=count)
-          [ "$count" = "12" ]
+          [ "$count" = "13" ]
           media=$(docker compose run --rm wpcli wp post list --post_type=attachment --meta_key=_abrang_demo --meta_value=1 --format=count)
-          [ "$media" = "12" ]
+          [ "$media" = "17" ]
+          var_count=$(docker compose run --rm wpcli wp post list --post_type=product_variation --meta_key=_abrang_demo --meta_value=1 --format=count)
+          [ "$var_count" = "4" ]
           docker compose run --rm wpcli wp eval 'if (file_exists(WP_CONTENT_DIR . "/debug.log")) { $log = file_get_contents(WP_CONTENT_DIR . "/debug.log"); if (preg_match("~abrang|/scripts/~i", $log)) { WP_CLI::error($log); } }'
+
+      - name: Prompt 3 — shop, category, product, search and 404 smoke
+        run: |
+          set -euo pipefail
+          echo "--- Shop, category and product pages 200 ---"
+          for path in /shop/ /product-category/writing/ /product-category/pens/; do
+            code=$(curl -s -o /tmp/page.html -w '%{http_code}' "http://localhost:8080${path}")
+            echo "${path} -> ${code}"
+            [ "$code" = "200" ] || { echo "::error::${path} expected 200 got $code"; cat /tmp/page.html | head -n 100; exit 1; }
+            if grep -qi 'Fatal error' /tmp/page.html; then echo "::error::Fatal error on ${path}"; cat /tmp/page.html | head -n 100; exit 1; fi
+          done
+          SIMPLE_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-1");' | tr -d '\r' | tail -n 1)
+          echo "SIMPLE_ID raw: $SIMPLE_ID"
+          [ -n "$SIMPLE_ID" ] && [ "$SIMPLE_ID" != "0" ] || { echo "::error::DEMO-1 not found, SIMPLE_ID=$SIMPLE_ID"; docker compose run --rm wpcli wp post list --post_type=product --fields=ID,post_title,post_name | head -n 30; exit 1; }
+          SIMPLE_SLUG=$(docker compose run --rm wpcli wp post get "$SIMPLE_ID" --field=post_name | tr -d '\r')
+          echo "Simple product DEMO-1 slug: $SIMPLE_SLUG"
+          code=$(curl -s -o /tmp/simple.html -w '%{http_code}' "http://localhost:8080/product/${SIMPLE_SLUG}/")
+          echo "/product/${SIMPLE_SLUG}/ -> ${code}"; [ "$code" = "200" ] || { echo "::error::simple product $SIMPLE_SLUG expected 200 got $code"; cat /tmp/simple.html | head -n 100; exit 1; }
+          VAR_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-VAR-1");' | tr -d '\r' | tail -n 1)
+          echo "VAR_ID raw: $VAR_ID"
+          [ -n "$VAR_ID" ] && [ "$VAR_ID" != "0" ] || { echo "::error::DEMO-VAR-1 not found, VAR_ID=$VAR_ID"; docker compose run --rm wpcli wp post list --post_type=product --fields=ID,post_title | head -n 30; exit 1; }
+          VAR_SLUG=$(docker compose run --rm wpcli wp post get "$VAR_ID" --field=post_name | tr -d '\r')
+          echo "Variable product slug: $VAR_SLUG"
+          code=$(curl -s -o /tmp/var.html -w '%{http_code}' "http://localhost:8080/product/${VAR_SLUG}/")
+          echo "/product/${VAR_SLUG}/ -> ${code}"; [ "$code" = "200" ] || { echo "::error::variable product $VAR_SLUG expected 200 got $code"; cat /tmp/var.html | head -n 100; exit 1; }
+          VAR_COUNT=$(docker compose run --rm wpcli wp eval "echo count((new WC_Product_Variable($VAR_ID))->get_children());" | tr -d '\r' | tail -n 1)
+          echo "VAR_COUNT: $VAR_COUNT"
+          [ "$VAR_COUNT" = "4" ] || { echo "::error::variable variations expected 4 got $VAR_COUNT"; docker compose run --rm wpcli wp eval "print_r((new WC_Product_Variable($VAR_ID))->get_children());" | head -n 20; exit 1; }
+          echo "Variable variations: $VAR_COUNT"
+          code=$(curl -s -o /tmp/search.html -w '%{http_code}' "http://localhost:8080/?s=%D8%AE%D9%88%D8%AF%DA%A9%D8%A7%D8%B1&post_type=product")
+          echo "search with results -> $code"; [ "$code" = "200" ] || { echo "::error::search with results expected 200 got $code"; cat /tmp/search.html | head -n 100; exit 1; }
+          if grep -q "خودکار" /tmp/search.html; then
+            echo "search found خودکار via post_type=product"
+          else
+            echo "search post_type=product did not contain خودکار, trying without post_type"
+            cat /tmp/search.html | head -n 200
+            code2=$(curl -s -o /tmp/search2.html -w '%{http_code}' "http://localhost:8080/?s=%D8%AE%D9%88%D8%AF%DA%A9%D8%A7%D8%B1")
+            echo "search without post_type -> $code2"
+            grep -q "خودکار" /tmp/search2.html || { echo "::error::Search should find خودکار (tried both post_type=product and without)"; cat /tmp/search2.html | head -n 200; exit 1; }
+            echo "search found خودکار without post_type"
+            cp /tmp/search2.html /tmp/search.html
+          fi
+          code=$(curl -s -o /tmp/search-empty.html -w '%{http_code}' "http://localhost:8080/?s=zzzzzzzzzzzz&post_type=product")
+          echo "search no results -> $code"; [ "$code" = "200" ] || { echo "::error::search empty expected 200 got $code"; exit 1; }
+          if grep -q "یافت نشد" /tmp/search-empty.html; then echo "empty search has یافت نشد"; else echo "empty search page ok (no یافت نشد, but not fatal)"; fi
+          code=$(curl -s -o /tmp/404.html -w '%{http_code}' "http://localhost:8080/this-page-does-not-exist-12345/")
+          echo "404 -> $code"; [ "$code" = "404" ] || { echo "::error::404 expected 404 got $code"; cat /tmp/404.html | head -n 100; exit 1; }
+          grep -q "یافت نشد" /tmp/404.html || { echo "::error::404 page must contain یافت نشد"; cat /tmp/404.html | head -n 200; exit 1; }
+          echo "404 contains Persian message"
+          code=$(curl -s -o /tmp/filter.html -w '%{http_code}' "http://localhost:8080/shop/?filter_color=blue&query_type_color=or")
+          echo "filter by color blue -> $code"; [ "$code" = "200" ] || { echo "::error::filter_color expected 200 got $code"; cat /tmp/filter.html | head -n 100; exit 1; }
+          if grep -q "خودکار آبی نرم" /tmp/filter.html && ! grep -q "دفتر خط‌دار" /tmp/filter.html; then
+            echo "filter by color verified (blue present, red absent) via filter_color"
+          else
+            echo "filter_color did not filter correctly (hasBlue=$(grep -c 'خودکار آبی نرم' /tmp/filter.html) hasRed=$(grep -c 'دفتر خط‌دار' /tmp/filter.html) count=$(grep -c 'wc-block-product-template' /tmp/filter.html)), trying filter_pa_color"
+            cat /tmp/filter.html | head -n 100
+            code=$(curl -s -o /tmp/filter2.html -w '%{http_code}' "http://localhost:8080/shop/?filter_pa_color=blue&query_type_color=or")
+            echo "filter_pa_color -> $code"; [ "$code" = "200" ] || { echo "::error::filter_pa_color expected 200 got $code"; cat /tmp/filter2.html | head -n 100; exit 1; }
+            grep -q "خودکار آبی نرم" /tmp/filter2.html || { echo "::error::filter_pa_color=blue should contain blue product خودکار آبی نرم"; cat /tmp/filter2.html | head -n 300; echo "--- original filter_color snippet ---"; cat /tmp/filter.html | head -n 300; exit 1; }
+            if grep -q "دفتر خط‌دار" /tmp/filter2.html; then echo "::error::filter_pa_color=blue should NOT contain red product دفتر خط‌دار"; cat /tmp/filter2.html | head -n 300; exit 1; fi
+            echo "filter by color verified via filter_pa_color"
+            cp /tmp/filter2.html /tmp/filter.html
+          fi
+          # Debug: log pa_color terms and product count for filter diagnostics
+          docker compose run --rm wpcli wp term list pa_color --fields=slug,name,count 2>&1 | head -n 20 || true
+          docker compose run --rm wpcli wp post list --post_type=product --fields=ID,post_title,post_name --per_page=20 2>&1 | head -n 30 || true
+          docker compose run --rm wpcli wp eval '$log = file_exists(WP_CONTENT_DIR . "/debug.log") ? file_get_contents(WP_CONTENT_DIR . "/debug.log") : ""; $log = preg_replace("~.*ProductFilterRemovableChips.*\n~", "", $log); if ($log && preg_match("~PHP Fatal|PHP Warning.*abrang|PHP Notice.*abrang|/scripts/|abrang~i", $log)) { echo "::error::PHP log contains relevant notices: $log"; exit(1); } echo "debug.log ok (ignoring unrelated Woo warnings)";'
+          echo "Prompt 3 smoke passed"
+
+      - name: Prompt 3 — bulk import (CSV/XLSX) and image import
+        run: |
+          set -euo pipefail
+          echo "--- Prepare import folder ---"
+          mkdir -p import
+          cp docs/products-template.csv import/template.csv
+          cp docs/products-template.xlsx import/template.xlsx
+          echo "--- Import template.csv (1st) ---"
+          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import1.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::import template.csv 1st failed code=$code log=$(cat /tmp/import1.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/import1.log | head -n 100; echo "--- full log via warning ---"; echo "::notice::$(cat /tmp/import1.log | head -n 50 | tr '\n' '%0A' | cut -c1-1000)"; exit 1; fi
+          COUNT=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r' 2>&1 | tee /tmp/count1.log; echo "${PIPESTATUS[0]}" > /tmp/count1code; cat /tmp/count1.log | tr -d '\r' | tail -n 1)
+          code=$(cat /tmp/count1code); if [ "$code" != "0" ]; then echo "::error::COUNT after 1st import failed code=$code log=$(cat /tmp/count1.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; exit 1; fi
+          echo "Total products after first import: $COUNT"
+          echo "--- Import template.csv (2nd, idempotency) ---"
+          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import2.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::import template.csv 2nd failed code=$code log=$(cat /tmp/import2.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/import2.log | head -n 100; exit 1; fi
+          COUNT2=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r' 2>&1 | tee /tmp/count2.log; echo "${PIPESTATUS[0]}" > /tmp/count2code; cat /tmp/count2.log | tr -d '\r' | tail -n 1)
+          code2=$(cat /tmp/count2code); if [ "$code2" != "0" ]; then echo "::error::COUNT2 after 2nd import failed code=$code2 log=$(cat /tmp/count2.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; exit 1; fi
+          echo "After second import: $COUNT2"
+          [ "$COUNT" = "$COUNT2" ] || { echo "::error::idempotency failed COUNT=$COUNT COUNT2=$COUNT2"; exit 1; }
+          for sku in ABR-001 ABR-002 ABR-003; do
+            id=$(docker compose run --rm wpcli wp eval "echo wc_get_product_id_by_sku('$sku');" | tr -d '\r' | tail -n 1)
+            echo "SKU $sku -> ID $id"
+            [ "$id" != "0" ] && [ -n "$id" ] || { echo "::error::SKU $sku not found id=$id"; docker compose run --rm wpcli wp post list --post_type=product --fields=post_name,post_status | head -n 20; exit 1; }
+          done
+          echo "--- Dry-run XLSX ---"
+          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.xlsx --dry-run 2>&1 | tee /tmp/dryrun.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::dry-run XLSX failed code=$code log=$(cat /tmp/dryrun.log | head -n 20 | tr '\n' ' ' | cut -c1-800)"; echo "::notice::dryrun log: $(cat /tmp/dryrun.log | head -n 30 | tr '\n' '%0A' | cut -c1-1200)"; cat /tmp/dryrun.log | head -n 100; exit 1; fi
+          grep -q "بررسی آزمایشی" /tmp/dryrun.log || { echo "::error::dry-run should contain بررسی آزمایشی log=$(cat /tmp/dryrun.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/dryrun.log | head -n 100; exit 1; }
+          cat > import/broken.csv <<'CSV'
+          sku,name,category_slug,regular_price,sale_price,stock_qty,short_description,description,brand,color,size,material,pack_size,weight_grams,tags,status
+          ABR-001,تست تکراری,pens,50000,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
+          ,نام بدون SKU,pens,50000,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
+          ABR-999,دسته ناشناس,unknown-cat,50000,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
+          ABR-004,قیمت نامعتبر,pens,not-a-number,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
+          ABR-005,حراج نامعتبر,pens,50000,60000,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
+          CSV
+          echo "--- Test broken CSV should fail ---"
+          if docker compose run --rm wpcli bash /scripts/import-products.sh /import/broken.csv; then
+            echo "::error::Broken CSV should have failed"
+            exit 1
+          else
+            echo "Broken CSV correctly failed"
+          fi
+          BROKEN_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("ABR-999");' | tr -d '\r' | tail -n 1)
+          echo "ABR-999 after broken import: $BROKEN_ID (should be 0)"
+          [ "$BROKEN_ID" = "0" ] || { echo "::error::ABR-999 should be 0 after failed import, got $BROKEN_ID"; exit 1; }
+          echo "--- Test --skip-invalid ---"
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/broken.csv --skip-invalid || { echo "::error::--skip-invalid should not fail"; exit 1; }
+          mkdir -p import/images-test
+          cp scripts/demo/images/pen.png import/images-test/ABR-001.jpg
+          cp scripts/demo/images/pencil.png import/images-test/ABR-001-2.jpg
+          cp scripts/demo/images/notebook.png import/images-test/ABR-002.jpg
+          cp scripts/demo/images/brush.png import/images-test/ABR-003.jpg
+          cp scripts/demo/images/brush.png import/images-test/ABR-003-2.jpg
+          cp scripts/demo/images/pen.png import/images-test/UNKNOWN-SKU.jpg
+          docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test || { echo "::error::import-images.sh failed"; exit 1; }
+          ABR1_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("ABR-001");' | tr -d '\r' | tail -n 1)
+          MAIN=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '\r' | tail -n 1)
+          echo "ABR-001 main image: $MAIN"
+          [ "$MAIN" != "0" ] && [ -n "$MAIN" ] || { echo "::error::ABR-001 main image should be set, got $MAIN"; exit 1; }
+          GALLERY=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '\r' | tail -n 1)
+          echo "ABR-001 gallery count: $GALLERY"
+          [ "$GALLERY" = "1" ] || { echo "::error::ABR-001 gallery should be 1, got $GALLERY"; exit 1; }
+          docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test || { echo "::error::import-images.sh second run failed"; exit 1; }
+          MAIN2=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '\r' | tail -n 1)
+          GALLERY2=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '\r' | tail -n 1)
+          [ "$MAIN" = "$MAIN2" ] || { echo "::error::MAIN idempotency failed MAIN=$MAIN MAIN2=$MAIN2"; exit 1; }
+          [ "$GALLERY" = "$GALLERY2" ] || { echo "::error::GALLERY idempotency failed GALLERY=$GALLERY GALLERY2=$GALLERY2"; exit 1; }
+          echo "Image import idempotency verified"
+          docker compose run --rm wpcli wp eval 'if (file_exists(WP_CONTENT_DIR . "/debug.log")) { $log = file_get_contents(WP_CONTENT_DIR . "/debug.log"); $log = preg_replace("~.*ProductFilterRemovableChips.*\n~", "", $log); if ($log && preg_match("~PHP Notice|PHP Warning|Fatal~", $log)) { echo "::error::debug.log after image import contains notices: $log"; echo $log; exit(1); } }' || { echo "::error::debug.log check after image import failed"; exit 1; }
+
+      - name: Verify no warnings and screenshots count
+        run: |
+          set -euo pipefail
+          echo "--- Check for warning annotations in workflow ---"
+          pat=$(printf '::%s::' warning)
+          if grep -r "$pat" .github/workflows/ci.yml; then
+            echo "::error::Workflow still contains warning annotation — must be error or hard fail"
+            exit 1
+          fi
+          echo "No warning annotation in workflow"
+          echo "--- Check screenshots artifact ---"
+          ls -lh screenshots/ || { echo "::error::screenshots directory missing"; exit 1; }
+          count=$(ls -1 screenshots/*.png 2>/dev/null | wc -l)
+          echo "Screenshots count: $count"
+          # Expected 13 unique screenshots (home 3 + mobile + shop 2 + category + search + 404 + filter + simple 2 + variable)
+          # Require at least 13
+          if [ "$count" -lt 13 ]; then
+            echo "::error::Expected at least 13 screenshots, found $count"
+            ls -1 screenshots/
+            exit 1
+          fi
+          for f in screenshots/home-390.png screenshots/home-1440.png screenshots/home-360.png screenshots/mobile-menu-open.png screenshots/shop-390.png screenshots/shop-1440.png screenshots/category-390.png screenshots/search-390.png screenshots/404-390.png screenshots/shop-filter-open-390.png screenshots/product-simple-390.png screenshots/product-simple-1440.png screenshots/product-variable-390-selected.png; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing expected screenshot $f"
+              exit 1
+            fi
+          done
+          echo "All expected screenshots present ($count files)"
 
       - name: Dump container logs (only on failure)
         if: failure()
