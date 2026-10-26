@@ -250,14 +250,14 @@ jobs:
           grep -q "یافت نشد" /tmp/404.html || { echo "::error::404 page must contain یافت نشد"; cat /tmp/404.html | head -n 200; exit 1; }
           echo "404 contains Persian message"
           code=$(curl -s -o /tmp/filter.html -w '%{http_code}' "http://localhost:8080/shop/?filter_color=blue&query_type_color=or")
-          echo "filter by color blue -> $code"; [ "$code" = "200" ]
+          echo "filter by color blue -> $code"; [ "$code" = "200" ] || { echo "::error::filter_color expected 200 got $code"; cat /tmp/filter.html | head -n 100; exit 1; }
           if grep -q "خودکار آبی نرم" /tmp/filter.html && ! grep -q "دفتر خط‌دار" /tmp/filter.html; then
             echo "filter by color verified (blue present, red absent) via filter_color"
           else
             echo "filter_color did not filter correctly (hasBlue=$(grep -c 'خودکار آبی نرم' /tmp/filter.html) hasRed=$(grep -c 'دفتر خط‌دار' /tmp/filter.html) count=$(grep -c 'wc-block-product-template' /tmp/filter.html)), trying filter_pa_color"
             cat /tmp/filter.html | head -n 100
             code=$(curl -s -o /tmp/filter2.html -w '%{http_code}' "http://localhost:8080/shop/?filter_pa_color=blue&query_type_color=or")
-            echo "filter_pa_color -> $code"; [ "$code" = "200" ]
+            echo "filter_pa_color -> $code"; [ "$code" = "200" ] || { echo "::error::filter_pa_color expected 200 got $code"; cat /tmp/filter2.html | head -n 100; exit 1; }
             grep -q "خودکار آبی نرم" /tmp/filter2.html || { echo "::error::filter_pa_color=blue should contain blue product خودکار آبی نرم"; cat /tmp/filter2.html | head -n 300; echo "--- original filter_color snippet ---"; cat /tmp/filter.html | head -n 300; exit 1; }
             if grep -q "دفتر خط‌دار" /tmp/filter2.html; then echo "::error::filter_pa_color=blue should NOT contain red product دفتر خط‌دار"; cat /tmp/filter2.html | head -n 300; exit 1; fi
             echo "filter by color verified via filter_pa_color"
@@ -266,7 +266,7 @@ jobs:
           # Debug: log pa_color terms and product count for filter diagnostics
           docker compose run --rm wpcli wp term list pa_color --fields=slug,name,count 2>&1 | head -n 20 || true
           docker compose run --rm wpcli wp post list --post_type=product --fields=ID,post_title,post_name --per_page=20 2>&1 | head -n 30 || true
-          docker compose run --rm wpcli wp eval 'if (file_exists(WP_CONTENT_DIR . "/debug.log")) { $log = file_get_contents(WP_CONTENT_DIR . "/debug.log"); if ($log && preg_match("~PHP Notice|PHP Warning|Fatal~i", $log)) { echo $log; exit(1); } }'
+          docker compose run --rm wpcli wp eval 'if (file_exists(WP_CONTENT_DIR . "/debug.log")) { $log = file_get_contents(WP_CONTENT_DIR . "/debug.log"); if ($log && preg_match("~PHP Notice|PHP Warning|Fatal~i", $log)) { echo "::error::PHP log contains notices: $log"; exit(1); } }' || { echo "::error::wp eval debug.log check failed"; exit 1; }
           echo "Prompt 3 smoke passed"
 
       - name: Prompt 3 — bulk import (CSV/XLSX) and image import
