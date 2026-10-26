@@ -277,7 +277,7 @@ jobs:
           cp docs/products-template.csv import/template.csv
           cp docs/products-template.xlsx import/template.xlsx
           echo "--- Import template.csv (1st) ---"
-          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import1.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::import template.csv 1st failed code=$code log=$(cat /tmp/import1.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/import1.log | head -n 100; echo "--- full log via warning ---"; echo "::warning::$(cat /tmp/import1.log | head -n 50 | tr '\n' '%0A' | cut -c1-1000)"; exit 1; fi
+          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import1.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::import template.csv 1st failed code=$code log=$(cat /tmp/import1.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/import1.log | head -n 100; echo "--- full log via warning ---"; echo "::notice::$(cat /tmp/import1.log | head -n 50 | tr '\n' '%0A' | cut -c1-1000)"; exit 1; fi
           COUNT=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r' 2>&1 | tee /tmp/count1.log; echo "${PIPESTATUS[0]}" > /tmp/count1code; cat /tmp/count1.log | tr -d '\r' | tail -n 1)
           code=$(cat /tmp/count1code); if [ "$code" != "0" ]; then echo "::error::COUNT after 1st import failed code=$code log=$(cat /tmp/count1.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; exit 1; fi
           echo "Total products after first import: $COUNT"
@@ -293,7 +293,7 @@ jobs:
             [ "$id" != "0" ] && [ -n "$id" ] || { echo "::error::SKU $sku not found id=$id"; docker compose run --rm wpcli wp post list --post_type=product --fields=post_name,post_status | head -n 20; exit 1; }
           done
           echo "--- Dry-run XLSX ---"
-          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.xlsx --dry-run 2>&1 | tee /tmp/dryrun.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::dry-run XLSX failed code=$code log=$(cat /tmp/dryrun.log | head -n 20 | tr '\n' ' ' | cut -c1-800)"; echo "::warning::dryrun log: $(cat /tmp/dryrun.log | head -n 30 | tr '\n' '%0A' | cut -c1-1200)"; cat /tmp/dryrun.log | head -n 100; exit 1; fi
+          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.xlsx --dry-run 2>&1 | tee /tmp/dryrun.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::dry-run XLSX failed code=$code log=$(cat /tmp/dryrun.log | head -n 20 | tr '\n' ' ' | cut -c1-800)"; echo "::notice::dryrun log: $(cat /tmp/dryrun.log | head -n 30 | tr '\n' '%0A' | cut -c1-1200)"; cat /tmp/dryrun.log | head -n 100; exit 1; fi
           grep -q "بررسی آزمایشی" /tmp/dryrun.log || { echo "::error::dry-run should contain بررسی آزمایشی log=$(cat /tmp/dryrun.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/dryrun.log | head -n 100; exit 1; }
           cat > import/broken.csv <<'CSV'
           sku,name,category_slug,regular_price,sale_price,stock_qty,short_description,description,brand,color,size,material,pack_size,weight_grams,tags,status
