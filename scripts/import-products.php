@@ -224,12 +224,14 @@ function abrang_read_xlsx( $path ) {
     if ( false !== $data ) {
         $xml = simplexml_load_string( $data );
         if ( $xml ) {
-            $xml->registerXPathNamespace( 'm', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main' );
             foreach ( $xml->si as $si ) {
-                // Concatenate all t nodes inside si (handles rich text)
+                // Concatenate all t nodes inside si (handles rich text) — use local-name() to avoid namespace prefix issues
                 $text = '';
-                foreach ( $si->xpath( './/m:t' ) as $t ) {
-                    $text .= (string) $t;
+                $t_nodes = $si->xpath( './/*[local-name()="t"]' );
+                if ( $t_nodes ) {
+                    foreach ( $t_nodes as $t ) {
+                        $text .= (string) $t;
+                    }
                 }
                 // Fallback: si->t directly
                 if ( '' === $text && isset( $si->t ) ) {
@@ -260,11 +262,9 @@ function abrang_read_xlsx( $path ) {
         $zip->close();
         WP_CLI::error( 'تجزیهٔ Sheet1 ناموفق بود.' );
     }
-    $xml->registerXPathNamespace( 'm', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main' );
-
     $rows = array();
-    // sheetData/row
-    $row_nodes = $xml->xpath( '//m:sheetData/m:row' );
+    // sheetData/row — use local-name() to avoid namespace issues in wp eval-file context
+    $row_nodes = $xml->xpath( '//*[local-name()="sheetData"]/*[local-name()="row"]' );
     if ( ! $row_nodes ) {
         $zip->close();
         return $rows;
@@ -283,8 +283,8 @@ function abrang_read_xlsx( $path ) {
                     $value = $v;
                 }
             } elseif ( isset( $c->is ) ) {
-                // Inline string
-                $t_nodes = $c->is->xpath( './/m:t' );
+                // Inline string — use local-name() to avoid namespace prefix
+                $t_nodes = $c->is->xpath( './/*[local-name()="t"]' );
                 $value = '';
                 if ( $t_nodes ) {
                     foreach ( $t_nodes as $t ) {
