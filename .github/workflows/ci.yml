@@ -199,17 +199,17 @@ jobs:
             [ "$code" = "200" ]
             if grep -qi 'Fatal error' /tmp/page.html; then echo "Fatal error on ${path}"; exit 1; fi
           done
-          SIMPLE_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-1");' | tr -d '' | tail -n 1)
-          SIMPLE_SLUG=$(docker compose run --rm wpcli wp post get "$SIMPLE_ID" --field=post_name | tr -d '')
+          SIMPLE_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-1");' | tr -d '\r' | tail -n 1)
+          SIMPLE_SLUG=$(docker compose run --rm wpcli wp post get "$SIMPLE_ID" --field=post_name | tr -d '\r')
           echo "Simple product DEMO-1 slug: $SIMPLE_SLUG"
           code=$(curl -s -o /tmp/simple.html -w '%{http_code}' "http://localhost:8080/product/${SIMPLE_SLUG}/")
           echo "/product/${SIMPLE_SLUG}/ -> ${code}"; [ "$code" = "200" ]
-          VAR_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-VAR-1");' | tr -d '' | tail -n 1)
-          VAR_SLUG=$(docker compose run --rm wpcli wp post get "$VAR_ID" --field=post_name | tr -d '')
+          VAR_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("DEMO-VAR-1");' | tr -d '\r' | tail -n 1)
+          VAR_SLUG=$(docker compose run --rm wpcli wp post get "$VAR_ID" --field=post_name | tr -d '\r')
           echo "Variable product slug: $VAR_SLUG"
           code=$(curl -s -o /tmp/var.html -w '%{http_code}' "http://localhost:8080/product/${VAR_SLUG}/")
           echo "/product/${VAR_SLUG}/ -> ${code}"; [ "$code" = "200" ]
-          VAR_COUNT=$(docker compose run --rm wpcli wp eval "echo count((new WC_Product_Variable($VAR_ID))->get_children());" | tr -d '' | tail -n 1)
+          VAR_COUNT=$(docker compose run --rm wpcli wp eval "echo count((new WC_Product_Variable($VAR_ID))->get_children());" | tr -d '\r' | tail -n 1)
           [ "$VAR_COUNT" = "4" ]
           echo "Variable variations: $VAR_COUNT"
           code=$(curl -s -o /tmp/search.html -w '%{http_code}' "http://localhost:8080/?s=%D8%AE%D9%88%D8%AF%DA%A9%D8%A7%D8%B1&post_type=product")
@@ -234,14 +234,14 @@ jobs:
           cp docs/products-template.csv import/template.csv
           cp docs/products-template.xlsx import/template.xlsx
           docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv
-          COUNT=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '')
+          COUNT=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r')
           echo "Total products after first import: $COUNT"
           docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv
-          COUNT2=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '')
+          COUNT2=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r')
           echo "After second import: $COUNT2"
           [ "$COUNT" = "$COUNT2" ]
           for sku in ABR-001 ABR-002 ABR-003; do
-            id=$(docker compose run --rm wpcli wp eval "echo wc_get_product_id_by_sku('$sku');" | tr -d '' | tail -n 1)
+            id=$(docker compose run --rm wpcli wp eval "echo wc_get_product_id_by_sku('$sku');" | tr -d '\r' | tail -n 1)
             echo "SKU $sku -> ID $id"
             [ "$id" != "0" ] && [ -n "$id" ]
           done
@@ -260,7 +260,7 @@ jobs:
           else
             echo "Broken CSV correctly failed"
           fi
-          BROKEN_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("ABR-999");' | tr -d '' | tail -n 1)
+          BROKEN_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("ABR-999");' | tr -d '\r' | tail -n 1)
           echo "ABR-999 after broken import: $BROKEN_ID (should be 0)"
           [ "$BROKEN_ID" = "0" ]
           docker compose run --rm wpcli bash /scripts/import-products.sh /import/broken.csv --skip-invalid || true
@@ -272,16 +272,16 @@ jobs:
           cp scripts/demo/images/brush.png import/images-test/ABR-003-2.jpg
           cp scripts/demo/images/pen.png import/images-test/UNKNOWN-SKU.jpg
           docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test
-          ABR1_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("ABR-001");' | tr -d '' | tail -n 1)
-          MAIN=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '' | tail -n 1)
+          ABR1_ID=$(docker compose run --rm wpcli wp eval 'echo wc_get_product_id_by_sku("ABR-001");' | tr -d '\r' | tail -n 1)
+          MAIN=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '\r' | tail -n 1)
           echo "ABR-001 main image: $MAIN"
           [ "$MAIN" != "0" ] && [ -n "$MAIN" ]
-          GALLERY=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '' | tail -n 1)
+          GALLERY=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '\r' | tail -n 1)
           echo "ABR-001 gallery count: $GALLERY"
           [ "$GALLERY" = "1" ]
           docker compose run --rm wpcli bash /scripts/import-images.sh /import/images-test
-          MAIN2=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '' | tail -n 1)
-          GALLERY2=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '' | tail -n 1)
+          MAIN2=$(docker compose run --rm wpcli wp eval "echo wc_get_product($ABR1_ID)->get_image_id();" | tr -d '\r' | tail -n 1)
+          GALLERY2=$(docker compose run --rm wpcli wp eval "echo count(wc_get_product($ABR1_ID)->get_gallery_image_ids());" | tr -d '\r' | tail -n 1)
           [ "$MAIN" = "$MAIN2" ]
           [ "$GALLERY" = "$GALLERY2" ]
           echo "Image import idempotency verified"
