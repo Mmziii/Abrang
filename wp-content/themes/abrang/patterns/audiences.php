@@ -1,0 +1,8 @@
+<?php
+/**
+ * Title: برای شما
+ * Slug: abrang/audiences
+ * Categories: abrang
+ */
+?>
+<!-- wp:group {"className": "", "layout": {"type": "constrained"}} --><div class="wp-block-group "><!-- wp:heading {"level": 2} --><h2 class="wp-block-heading">همراه هر مسیر شما</h2><!-- /wp:heading --><!-- wp:html --><div class="abrang-audiences"><a class="abrang-card" href="/product-category/school/"><span aria-hidden="true"><svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 24V16a12 12 0 0 1 24 0v8 M16 22h32v36H16z M23 38h18v13H23z M16 31H9v20h7 M48 31h7v20h-7 M25 22v6 M39 22v6"/></svg></span><strong>برای مدرسه</strong></a><a class="abrang-card" href="/product-category/art-supplies/"><span aria-hidden="true"><svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M32 8C17 8 7 19 7 33s11 23 23 23c7 0 10-5 7-10-3-5 1-10 7-10h5c14 0 5-28-17-28Z M20 24h1 M31 18h1 M43 22h1 M17 36h1 M51 40l-9 15 M41 55l-4 4"/></svg></span><strong>برای هنرمندان</strong></a><a class="abrang-card" href="/product-category/office/"><span aria-hidden="true"><svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 23h46v32H9z M23 23v-9h18v9 M9 35c14 10 32 10 46 0 M27 36h10v9H27z"/></svg></span><strong>برای محیط کار</strong></a></div><!-- /wp:html --></div><!-- /wp:group -->

@@ -1,3 +1,5 @@
+# Prompt 1 (done)
+
 # PROGRESS — Prompt 1 of 5: Infrastructure + theme skeleton
 
 Branch: `arena/ff7b29a9-abrang` · One PR for this whole prompt · Owner merges himself.
@@ -99,3 +101,97 @@ docker compose run --rm wpcli bash /scripts/setup.sh
 Then open http://localhost:8080 and http://localhost:8080/wp-admin (user `admin`, password `abrang-admin-1234`).
 Stop with `docker compose down`; full reset with `docker compose down -v` then the last two commands again.
 Full step-by-step with expected results: see README.md.
+
+
+# Prompt 2
+
+- [x] Stage 1 — Product category tree — scripts/categories.{json,php}, setup.sh; JSON and bash syntax pass; run-twice/tree runtime checks delegated to CI (no local Docker/PHP).
+- [x] Stage 2 — Demo content and pages — scripts/demo*, pages.php, setup.sh, .env.example; bash syntax and generated PNG signatures checked; lifecycle runtime in CI. Images are original geometric placeholders, CC0.
+- [x] Stage 3 — Header — parts/header.html, wordmark.svg, theme.json, style.css; inline slug navigation and JSON checked; browser checks in CI.
+- [x] Stage 4 — Footer — parts/footer.html, style.css; seven slug links and no fake badges verified; mobile rendering checked in CI.
+- [x] Stage 5 — Home page — templates/front-page.html, six patterns, functions.php, wash.svg, style.css, setup.sh; six pattern references and shell syntax checked; runtime grids and empty-sale behavior covered by CI.
+- [x] Stage 6 — Tests, visual artifacts, docs — CI, tests/storefront.cjs, check-content.php, compose, README, ARCHITECTURE; YAML/JSON/JS/shell syntax passed locally; runtime and screenshots passed CI 40234712666 and PR run 40234717895; extra exact-count/empty-sale assertions added for final CI.
+
+
+## Not done (Prompt 2)
+
+- No local Docker/PHP runtime or manual screenshot inspection: sandbox lacks Docker/PHP and blocks the Azure artifact download host. CI generated and uploaded all three screenshots successfully; owner can review them on PR #2. Browser assertions passed at 360, 390 and 1440px.
+- Out of scope as requested: custom product/archive templates, checkout/payment/shipping configuration, actual legal text, SEO and deployment. Parent/WooCommerce default templates remain in use there.
+
+## Report (Prompt 2)
+
+### ساخته شد
+- ۵ دستهٔ اصلی و ۱۵ زیردسته با slug ثابت؛ نصب تکرارشونده بدون تغییر دسته‌های موجود.
+- ۱۲ محصول ساختگی با قیمت تومان، تخفیف و موجودی متفاوت، تصاویر هندسی اصلی CC0، حذف امن با متای اختصاصی؛ هفت برگهٔ اطلاعاتی واقعی با متن موقت.
+- سربرگ و پابرگ بلوکی، جستجوی محصول، حساب کاربری، سبد خرید، منوی کشویی و منوی موبایل؛ لوگوی موقت قابل جایگزینی و جایگاه خالی نماد اعتماد.
+- صفحهٔ نخست با شش الگوی قابل استفادهٔ مجدد: معرفی، دسته‌ها، تازه‌ترین محصولات، مخاطبان، تخفیف‌ها و ویژگی‌های اعتماد؛ رنگ تیرهٔ مرجانی برای خوانایی دکمه‌ها.
+- راهنمای فارسی PowerShell، هشدار اولویت قالب‌های ذخیره‌شده در دیتابیس و روش بازنشانی آنها.
+
+### آزمون
+- CIهای 40234712666 و 40234717895 سبز: نصب تازه، setup دوبار، درخت دقیق دسته‌ها، HTTP برگه‌ها و دسته‌ها، تست‌های قبلی، PHP lint و debug.log، حذف دوباره و بازسازی دوبارهٔ نمونه‌ها.
+- Playwright: صفحهٔ کامل ۳۹۰ و ۱۴۴۰ پیکسل و منوی باز موبایل؛ بدون اسکرول افقی در ۳۶۰ پیکسل. تصاویر در artifact به نام `screenshots` در Checks مربوط به PR شمارهٔ ۲ قرار دارند.
+- بررسی محلی: syntax شل و JavaScript، JSON و YAML. اجرای واقعی در CI بود، نه محیط محلی عامل.
+
+### محدودیت‌ها
+- مشخصات تماس، شبکه‌های اجتماعی، وعدهٔ ارسال، لوگو و متن‌های معرفی نمونه‌اند؛ پیش از انتشار باید مالک تأیید/جایگزین کند. متن حقوقی واقعی در این مرحله نوشته نشده است.
+- دانلود artifact برای بازبینی دستی عامل به‌علت محدودیت شبکه ممکن نبود؛ بازبینی بصری نهایی با مالک است. قالب‌های ذخیره‌شده در Site Editor ممکن است فایل‌های جدید را بپوشانند.
+- روی سایت واقعی ABRANG_DEMO باید صفر یا غایب باشد. خاموش کردن پرچم، داده‌های آزمایشی قبلی را حذف نمی‌کند.
+
+### دستورهای مالک (پس از ادغام PR شمارهٔ ۲؛ داخل پوشهٔ پروژه در PowerShell)
+```powershell
+git pull
+docker compose up -d
+docker compose run --rm wpcli bash /scripts/setup.sh
+```
+برای نمونه‌های محلی در تنظیمات قدیمی، بدون ویرایش فایل:
+```powershell
+docker compose run --rm -e ABRANG_DEMO=1 wpcli bash /scripts/setup.sh
+```
+برای پاک کردن محصولات و تصاویر آزمایشی (برگه‌ها و محصولات واقعی حفظ می‌شوند):
+```powershell
+docker compose run --rm wpcli bash /scripts/demo-remove.sh
+```
+برای بازسازی نمونه‌ها، فقط در محیط محلی:
+```powershell
+docker compose run --rm wpcli bash /scripts/demo.sh
+```
+سایت: http://localhost:8080 — تصاویر بررسی: PR #2 → Checks → CI → Artifacts → screenshots.
+
+# Prompt 2 — fixes
+
+- [x] Fix 1 — theme.json lowercase vazirmatn token and all references; tests/storefront.cjs checks body/headings/buttons and loaded font at 390/1440. JSON/JS syntax pass; runtime in final CI.
+- [x] Fix 2 — style.css, assets/storefront.js, functions.php, browser tests: opaque viewport modal, inert background/scroll lock, collapsed accessible accordion toggles; JS syntax passes, native focus/Escape retained; runtime in CI.
+- [x] Fix 3 — header part/grid CSS and storefront.js: hamburger, live-font wordmark, account/cart on one row; full-width 44px accessible magnifier search below. JS syntax passes; row geometry/search assertions added.
+- [x] Fix 4 — shared collection card CSS, product image/button render filters, theme tokens, patterns and original 800×800 fixtures + generator. PNG dimensions, JS/JSON pass; image square checks added; native product context supplies badges/secondary state.
+- [x] Fix 5 — setup.sh/persian-display.php enable native PW_Options[persian_price] idempotently (upstream class-price.php verified); Persian separator, display-only rendered-date text filters and scoped dynamic text-node conversion. JS/shell pass; price and untouched input/attribute assertions added.
+- [x] Fix 6 — audience/trust patterns now have backpack/palette/briefcase and truck/shield-check/lock/headset SVGs, consistent 56px/2.5px rounded strokes across all three sections (including category tiles); checked seven unique paths and no category reuse.
+- [x] Fix 7 — theme spacing presets (64/40/24px), home/template CSS and full-width mist trust band, tile hover/focus/reduced-motion states. JSON/YAML/JS/shell checks pass; final runtime verification recorded below.
+
+
+## Review-fixes verification
+
+All seven item groups committed on the same branch/PR #2. Added browser checks for
+loaded/computed Vazirmatn, opaque viewport menu and inert hero, collapsed/expanded
+accordion, one mobile header row and full-width search, square product images,
+Persian price text and untouched numeric input values/attributes, card button overflow.
+First full review CI verified mobile (font, menu, digits, geometry), then caught desktop overflow in the new full-width trust band. Diagnostics traced the 24px overflow to inherited WordPress global padding versus the custom gutter. Trust band now uses a centered viewport-width bleed independent of padding; overflow diagnostics retained. Verified PR CI 40241275296 GREEN (3m23s): all previous and new browser assertions passed; regenerated screenshots artifact includes home-390.png, home-1440.png and mobile-menu-open.png.
+
+Existing local demo images can be refreshed (only marked demo products/media are deleted):
+```powershell
+git pull
+docker compose run --rm wpcli bash /scripts/demo-remove.sh
+docker compose run --rm -e ABRANG_DEMO=1 wpcli bash /scripts/setup.sh
+```
+Do not run demo generation on production. Site Editor overrides still require reset.
+
+
+## Prompt 2 — fixes report
+
+- Font token is lowercase throughout; all home headings/buttons/body report Vazirmatn and the font is loaded.
+- Mobile navigation is an opaque paper viewport modal, locks background scroll, makes home/footer inert and provides collapsed keyboard-accessible accordions; native focus trap/Escape remain intact.
+- Mobile header has one hamburger/wordmark/account/cart row and full-width search below. Search keeps its accessible label and uses a magnifier and Persian placeholder; wordmark is live Vazirmatn text over a subtle wash.
+- Shared collection cards have white rounded surfaces, square product illustrations (five original 800px PNGs), two-line titles, aligned bottom buttons, price hierarchy and sale/stock pills. Indigo/paper button contrast 8.13:1; ink/coral sale pill 4.81:1; muted price/white 5.78:1.
+- Native Persian WooCommerce price setting and Persian separator are idempotently configured. Scoped display-only text conversion covers dynamic prices/counts and dates; browser tests prove numeric field values/attributes stay unchanged. Date localization targets rendered text only, not global wp_date/date_i18n, preserving machine-readable datetime attributes; an explicit datetime preservation assertion was added.
+- Audience/trust icons are distinct backpack/palette/briefcase and truck/shield-check/lock/headset SVGs. Section spacing uses 64/40px presets, a separate mist trust band, hover/focus states and reduced-motion support.
+- CI 40241275296 passed including all prior smoke/lifecycle checks and new computed-font, modal/accordion, geometry, square-image, digit/input-safety and overflow assertions. Three refreshed screenshots uploaded as `screenshots`. Agent cannot manually inspect artifact images because the sandbox blocks the artifact storage host; owner review remains available in PR #2 → Checks → CI → Artifacts.
+- No branch/PR changes, no production configuration or later-prompt work. Owner applies the PowerShell commands above after merging; resetting Site Editor overrides may be necessary.

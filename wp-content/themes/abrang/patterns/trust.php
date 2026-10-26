@@ -1,0 +1,8 @@
+<?php
+/**
+ * Title: خرید با خیال آسوده
+ * Slug: abrang/trust
+ * Categories: abrang
+ */
+?>
+<!-- wp:group {"className": "abrang-trust-band", "align":"full", "backgroundColor":"mist", "layout": {"type": "constrained"}} --><div class="wp-block-group alignfull abrang-trust-band has-mist-background-color has-background"><!-- wp:html --><div class="abrang-features"><div><svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19h32v28H5z M37 29h12l10 11v7H37 M45 29v11h14 M12 47a6 6 0 1 0 12 0 M41 47a6 6 0 1 0 12 0 M5 28h17 M5 36h12"/></svg><p>ارسال سریع به سراسر کشور</p></div><div><svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M32 6l22 9v17c0 13-13 22-22 27C23 54 10 45 10 32V15z M21 31l8 8 16-17"/></svg><p>ضمانت اصالت کالا</p></div><div><svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 28h32v29H16z M22 28V17a10 10 0 0 1 20 0v11 M32 39v8"/></svg><p>پرداخت امن آنلاین</p></div><div><svg viewBox="0 0 64 64" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 35v-6a22 22 0 0 1 44 0v6 M10 31H6v17h12V31z M54 31h4v17H46V31z M54 48c0 9-8 10-19 10 M27 55h10v6H27z"/></svg><p>پشتیبانی</p></div></div><!-- /wp:html --></div><!-- /wp:group -->

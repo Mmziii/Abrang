@@ -39,3 +39,60 @@ function abrang_enqueue_styles() {
 	);
 }
 add_action( 'wp_enqueue_scripts', 'abrang_enqueue_styles' );
+
+/** Reusable storefront sections in the inserter. */
+add_action( 'init', static function () {
+    register_block_pattern_category( 'abrang', array( 'label' => 'آبرنگ' ) );
+} );
+
+/** Avoid an empty promotional section when no products are on sale. */
+add_filter( 'render_block_core/group', static function ( $content, $block ) {
+    if ( str_contains( $block['attrs']['className'] ?? '', 'abrang-sale' ) && function_exists( 'wc_get_product_ids_on_sale' ) && ! wc_get_product_ids_on_sale() ) {
+        return '';
+    }
+    return $content;
+}, 10, 2 );
+
+/** Progressive enhancement for the core navigation overlay. */
+add_action( 'wp_enqueue_scripts', static function () {
+    wp_enqueue_script( 'abrang-storefront', get_stylesheet_directory_uri() . '/assets/storefront.js', array(), (string) filemtime( get_stylesheet_directory() . '/assets/storefront.js' ), true );
+} );
+
+/** Reusable collection image badges; no stock values are inferred in the browser. */
+add_filter( 'render_block_woocommerce/product-image', static function ( $content, $block, $instance ) {
+    $product = wc_get_product( $instance->context['postId'] ?? 0 );
+    if ( ! $product ) { return $content; }
+    $badges = '';
+    if ( $product->is_on_sale() ) { $badges .= '<span class="abrang-badge abrang-badge-sale">تخفیف</span>'; }
+    if ( ! $product->is_in_stock() ) { $badges .= '<span class="abrang-badge abrang-badge-stock">ناموجود</span>'; }
+    return '<div class="abrang-product-image">' . $content . '<div class="abrang-product-badges">' . $badges . '</div></div>';
+}, 10, 3 );
+
+add_filter( 'woocommerce_product_add_to_cart_text', static function ( $text, $product ) {
+    if ( is_admin() ) { return $text; }
+    return $product->is_type( 'simple' ) && $product->is_in_stock() && $product->is_purchasable() ? 'افزودن به سبد' : 'اطلاعات بیشتر';
+}, 10, 2 );
+
+add_filter( 'render_block_woocommerce/product-button', static function ( $content, $block, $instance ) {
+    $product = wc_get_product( $instance->context['postId'] ?? 0 );
+    if ( $product && ( ! $product->is_in_stock() || ! $product->is_type( 'simple' ) || ! $product->is_purchasable() ) ) {
+        return '<div class="abrang-secondary">' . $content . '</div>';
+    }
+    return $content;
+}, 10, 3 );
+
+/** Display-only date digits. Never filter numeric timestamps, inputs, or stored data. */
+function abrang_display_digits( $text ) {
+    if ( is_admin() || ! is_string( $text ) ) { return $text; }
+    return strtr( $text, array( '0'=>'۰', '1'=>'۱', '2'=>'۲', '3'=>'۳', '4'=>'۴', '5'=>'۵', '6'=>'۶', '7'=>'۷', '8'=>'۸', '9'=>'۹' ) );
+}
+// Only block text, never wp_date/date_i18n globally: those also produce machine
+// dates in datetime attributes, REST responses and structured data.
+add_filter( 'render_block_core/post-date', static function ( $html ) {
+    $tokens = wp_html_split( $html );
+    foreach ( $tokens as &$token ) {
+        if ( '' !== $token && '<' !== $token[0] ) { $token = abrang_display_digits( $token ); }
+    }
+    unset( $token );
+    return implode( '', $tokens );
+} );
