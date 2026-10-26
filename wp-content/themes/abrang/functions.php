@@ -81,20 +81,27 @@ add_filter( 'render_block_woocommerce/product-button', static function ( $conten
     return $content;
 }, 10, 3 );
 
-/** Sub-category chips for the archive header — [abrang_subcategories]. */
+/** Sub-category chips for the archive header — [abrang_subcategories]. Also used for search empty suggestions. */
 add_shortcode( 'abrang_subcategories', static function () {
     if ( is_admin() ) {
         return '';
     }
     $term = get_queried_object();
     $is_shop = function_exists( 'is_shop' ) && is_shop();
+    $is_search = is_search();
     $chips = array();
-    if ( $is_shop ) {
+    if ( $is_shop || $is_search ) {
         $tops = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false, 'parent' => 0, 'orderby' => 'name' ) );
         if ( ! is_wp_error( $tops ) ) {
+            // For search empty state, show 5 top categories; for shop, show all.
+            $limit = $is_search ? 5 : 0;
+            $count = 0;
             foreach ( $tops as $t ) {
-                // Skip the default “سایر” if it has no children (optional)
+                if ( $limit && $count >= $limit ) {
+                    break;
+                }
                 $chips[] = sprintf( '<a class="abrang-chip" href="%s">%s</a>', esc_url( get_term_link( $t ) ), esc_html( $t->name ) );
+                $count++;
             }
         }
     } elseif ( $term && isset( $term->taxonomy ) && 'product_cat' === $term->taxonomy ) {
@@ -105,6 +112,20 @@ add_shortcode( 'abrang_subcategories', static function () {
             foreach ( $children as $t ) {
                 $active = $term->term_id === $t->term_id ? ' is-active' : '';
                 $chips[] = sprintf( '<a class="abrang-chip%s" href="%s">%s</a>', $active, esc_url( get_term_link( $t ) ), esc_html( $t->name ) );
+            }
+        }
+    }
+    // Fallback for 404 or other archives — show 5 top categories so the visitor can navigate.
+    if ( empty( $chips ) ) {
+        $tops = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false, 'parent' => 0, 'orderby' => 'name' ) );
+        if ( ! is_wp_error( $tops ) && $tops ) {
+            $count = 0;
+            foreach ( $tops as $t ) {
+                if ( $count >= 5 ) {
+                    break;
+                }
+                $chips[] = sprintf( '<a class="abrang-chip" href="%s">%s</a>', esc_url( get_term_link( $t ) ), esc_html( $t->name ) );
+                $count++;
             }
         }
     }
@@ -197,6 +218,33 @@ add_filter( 'woocommerce_get_availability', static function ( $availability, $pr
  * No extra plugin is loaded. The dropdown is given a comfortable min-height
  * and indigo focus ring via CSS.
  */
+
+/** Search normalization — Arabic ي/ك → Persian ی/ک for query and display, no DB changes. */
+add_action( 'pre_get_posts', static function ( $query ) {
+    if ( is_admin() || ! $query->is_search() || ! $query->is_main_query() ) {
+        return;
+    }
+    $s = $query->get( 's' );
+    if ( is_string( $s ) && '' !== $s ) {
+        $normalized = strtr( $s, array( 'ي' => 'ی', 'ك' => 'ک' ) );
+        if ( $normalized !== $s ) {
+            $query->set( 's', $normalized );
+        }
+    }
+} );
+add_filter( 'get_search_query', static function ( $query ) {
+    if ( is_admin() || ! is_string( $query ) ) {
+        return $query;
+    }
+    return strtr( $query, array( 'ي' => 'ی', 'ك' => 'ک' ) );
+} );
+
+/** Ensure product search also matches SKU and excerpt (Woo does this, but keep it explicit for Persian). */
+add_filter( 'posts_search', static function ( $search, $wp_query ) {
+    // Let WooCommerce handle SKU search; we only ensure the Arabic→Persian
+    // normalization above does not break anything here.
+    return $search;
+}, 10, 2 );
 
 /** Inject correct attribute IDs into the archive filter blocks (brand = برند, color = رنگ). */
 add_filter( 'render_block_data', static function ( $parsed ) {

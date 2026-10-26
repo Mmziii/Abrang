@@ -246,4 +246,14 @@ body:has(main.abrang-home) .abrang-footer {margin-top:0!important}
 @media(max-width:781px){
  .abrang-sticky-bar {padding:10px 16px}
 }
+/* Search results and 404 — reuse archive grid and empty states. */
+.abrang-search {padding-top:16px}
+.abrang-search-meta {padding:12px 0;border-top:1px solid var(--wp--preset--color--mist);border-bottom:1px solid var(--wp--preset--color--mist);margin-block:16px}
+.abrang-search .abrang-products {margin-top:16px}
+.abrang-404 {padding:48px 16px;text-align:center;max-width:640px;margin:0 auto}
+.abrang-404 h1 {font-size:clamp(28px,4vw,36px)}
+.abrang-404 .abrang-404-search {max-width:480px;margin:24px auto}
+.abrang-404 .abrang-404-search input {width:100%}
+.abrang-404-chips {margin-top:24px}
+.abrang-404-chips .abrang-chips {justify-content:center}
 @media(prefers-reduced-motion:reduce){.abrang-card{transition:none}.abrang-card:hover,.abrang-card:focus-visible{transform:none}}

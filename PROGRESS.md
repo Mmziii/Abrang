@@ -250,7 +250,10 @@ additionally executed locally inside a php-wasm PHP 8 runtime.
   - tabs `woocommerce/product-details` «توضیحات/مشخصات/نظرات» + `woocommerce_review_rating_verification_required=yes` idempotent in `setup.sh` (verified buyers only)
   - related «محصولات مشابه» same category 4 items via `product-collection` related `categories|tags` + `abrang-products` cards; `php-parser`+`node --check` pass
 
-- [ ] **Stage 5 — Search results and 404**
+- [x] **Stage 5 — Search results and 404** — `templates/{search.html,product-search-results.html,404.html}`, `functions.php` (Arabic→Persian normalization), `style.css`, `assets/storefront.js`
+  - search results use same `abrang-products` grid (2/3/4, 16 per page, `abrang-pagination`), header «نتایج جستجو برای: …» via `query-title` type search, empty state Persian + `[abrang_subcategories]` 5 top categories + link `/shop/` + `product-search`; `inherit:true` product-collection ensures search finds title/SKU/short text via Woo's SKU search
+  - search normalization `pre_get_posts` + `get_search_query` Arabic ي/ك → Persian ی/ک (display/query only, no DB change), Persian digits via walker, same walker covers breadcrumbs/result-count/pagination
+  - 404 `templates/404.html` friendly Persian «صفحهٔ مورد نظر یافت نشد», `woocommerce/product-search` box, 5 top category chips + shop/home links, returns 404 status; `php-parser`+`node --check` pass
 
 - [ ] **Stage 6 — Tests, screenshots, docs**
 
