@@ -54,16 +54,32 @@ html.abrang-menu-open,html.abrang-menu-open body {overflow:hidden!important}
 @media(max-width:781px){
  .abrang-header .wp-block-navigation__responsive-container.is-menu-open {
   position:fixed!important;inset:0!important;z-index:100000!important;
-  width:100%;height:100dvh;background:var(--wp--preset--color--paper)!important;
-  color:var(--wp--preset--color--ink);padding:72px 24px 32px;overflow-y:auto;
+  width:100%;height:100dvh;box-sizing:border-box;background:var(--wp--preset--color--paper)!important;
+  color:var(--wp--preset--color--ink);padding:64px 16px 32px;overflow-y:auto;overflow-x:hidden;
  }
- .abrang-header .wp-block-navigation__responsive-container-close {position:fixed;top:20px;inset-inline-end:24px;color:var(--wp--preset--color--indigo);display:block;z-index:1}
- .abrang-header .is-menu-open .wp-block-navigation__container {width:100%;align-items:stretch!important;gap:0!important}
- .abrang-header .is-menu-open .wp-block-navigation-item {width:100%;align-items:center!important;flex-direction:row!important;flex-wrap:wrap;justify-content:space-between;font-weight:700;border-bottom:1px solid var(--wp--preset--color--mist);padding:12px 0}
- .abrang-header .is-menu-open .wp-block-navigation-submenu__toggle {display:flex!important;align-items:center;justify-content:center;min-width:44px;min-height:44px}
- .abrang-header .is-menu-open .has-child > .wp-block-navigation__submenu-container {display:none!important;width:100%;padding:8px 20px 0 0!important;position:static!important;visibility:visible!important;opacity:1!important;background:var(--wp--preset--color--paper)!important}
+ .abrang-header .wp-block-navigation__responsive-container-close {
+  position:fixed!important;top:12px;inset-inline-start:auto!important;inset-inline-end:12px!important;inset-inline-start:unset!important;
+  right:12px!important;left:auto!important;
+  width:44px;height:44px;display:flex!important;align-items:center;justify-content:center;
+  background:var(--wp--preset--color--paper)!important;border:1px solid var(--wp--preset--color--mist)!important;border-radius:8px!important;
+  color:var(--wp--preset--color--indigo)!important;z-index:100001!important;box-shadow:0 2px 8px rgba(0,0,0,.08);
+ }
+ /* For RTL the close is still at the visual right (where the hamburger was). The fixed
+    right:12px above guarantees it stays 12px inside the viewport on both LTR and RTL. */
+ .abrang-header .wp-block-navigation__responsive-container-close svg {width:24px;height:24px}
+ .abrang-header .is-menu-open .wp-block-navigation__responsive-container-content {width:100%;box-sizing:border-box;padding-inline:8px}
+ .abrang-header .is-menu-open .wp-block-navigation__container {width:100%;align-items:stretch!important;gap:0!important;box-sizing:border-box}
+ .abrang-header .is-menu-open .wp-block-navigation-item {width:100%;box-sizing:border-box;align-items:center!important;flex-direction:row!important;flex-wrap:wrap;justify-content:space-between;font-weight:700;border-bottom:1px solid var(--wp--preset--color--mist);padding:12px 8px;gap:8px}
+ .abrang-header .is-menu-open .wp-block-navigation-item__content {flex:1;min-width:0;padding-inline:4px}
+ .abrang-header .is-menu-open .wp-block-navigation-submenu__toggle {
+  display:flex!important;align-items:center;justify-content:center;flex-shrink:0;
+  min-width:44px;min-height:44px;width:44px;height:44px;margin-inline-start:8px;
+  border:1px solid var(--wp--preset--color--mist);border-radius:8px;background:var(--wp--preset--color--paper);
+  color:var(--wp--preset--color--indigo);box-sizing:border-box;
+ }
+ .abrang-header .is-menu-open .has-child > .wp-block-navigation__submenu-container {display:none!important;width:100%;box-sizing:border-box;padding:8px 16px 0 8px!important;position:static!important;visibility:visible!important;opacity:1!important;background:var(--wp--preset--color--paper)!important;flex-direction:column;gap:0}
  .abrang-header .is-menu-open .has-child[data-abrang-expanded="true"] > .wp-block-navigation__submenu-container {display:flex!important}
- .abrang-header .is-menu-open .wp-block-navigation__submenu-container .wp-block-navigation-item {font-size:15px;font-weight:400;border:0;padding-block:8px}
+ .abrang-header .is-menu-open .wp-block-navigation__submenu-container .wp-block-navigation-item {font-size:15px;font-weight:400;border:0;padding-block:8px;padding-inline:8px}
 }
 
 /* Header grid: nav is first in DOM and shares the mobile top row with branding. */
@@ -89,6 +105,27 @@ html.abrang-menu-open,html.abrang-menu-open body {overflow:hidden!important}
  .abrang-header .wp-block-woocommerce-mini-cart__button {padding:4px;gap:2px}
 }
 
+/* Mini-cart: icon + small count badge only (hidden when 0), no amount. */
+.abrang-header .wp-block-woocommerce-mini-cart__amount,
+.abrang-header .wc-block-mini-cart__amount,
+.abrang-header .wc-block-mini-cart__tax-label {display:none!important}
+.abrang-header .wc-block-mini-cart__button {position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:6px!important;background:transparent!important;border:0!important;color:var(--wp--preset--color--indigo)!important}
+.abrang-header .wc-block-mini-cart__quantity-badge {position:relative;display:inline-flex;align-items:center;justify-content:center}
+.abrang-header .wc-block-mini-cart__badge {
+  position:absolute!important;top:-4px!important;inset-inline-end:-4px!important;left:auto!important;right:auto!important;
+  min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:10px;font-size:12px;font-weight:700;line-height:1;
+  background:var(--wp--preset--color--coral)!important;color:var(--wp--preset--color--paper)!important;
+  border:2px solid var(--wp--preset--color--paper);transform:none!important;
+}
+.abrang-header .wc-block-mini-cart__badge:empty,
+.abrang-header .wc-block-mini-cart__badge[hidden],
+.abrang-header .wc-block-mini-cart__badge[style*="display: none"] {display:none!important}
+@media(max-width:781px){
+ .abrang-header .wc-block-mini-cart__badge {top:-2px!important;inset-inline-end:-2px!important}
+}
+
 /* Shared collection cards (also usable by subsequent archive templates). */
 .wc-block-product-template > li.wc-block-product {display:flex;flex-direction:column;box-sizing:border-box;height:100%;position:relative;padding:12px;border:1px solid var(--wp--preset--color--mist);border-radius:12px;background:var(--wp--preset--color--white);gap:12px}
 .abrang-product-image {position:relative;width:100%;aspect-ratio:1}
@@ -99,7 +136,9 @@ html.abrang-menu-open,html.abrang-menu-open body {overflow:hidden!important}
 .wc-block-product-template .wp-block-woocommerce-product-price {margin:0!important;font-size:16px;color:var(--wp--preset--color--ink)}
 .wc-block-product-template .price {display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;font-weight:700}
 .wc-block-product-template ins {font-weight:700;text-decoration:none;color:var(--wp--preset--color--ink)}
-.wc-block-product-template del {font-size:12px;color:var(--wp--preset--color--muted);font-weight:400;opacity:1}
+.wc-block-product-template del {font-size:13px;color:var(--wp--preset--color--muted);font-weight:400;opacity:1;text-decoration:line-through;text-decoration-thickness:1px}
+.wc-block-product-template del .woocommerce-Price-currencySymbol {text-decoration:line-through}
+.wc-block-product-template del + ins {margin-inline-start:2px}
 .wc-block-product-template .wp-block-woocommerce-product-button,.wc-block-product-template .abrang-secondary {margin-top:auto!important;width:100%}
 .wc-block-product-template .wp-block-button__link {box-sizing:border-box;width:100%;padding:10px 4px;font-size:14px;line-height:1.6;white-space:nowrap;background:var(--wp--preset--color--indigo);color:var(--wp--preset--color--paper);border:1px solid var(--wp--preset--color--indigo);border-radius:8px}
 .wc-block-product-template .abrang-secondary .wp-block-button__link {background:var(--wp--preset--color--white);color:var(--wp--preset--color--indigo)}
@@ -116,11 +155,14 @@ html.abrang-menu-open,html.abrang-menu-open body {overflow:hidden!important}
 .abrang-home > .wp-block-group > h2 {margin-block:0 var(--wp--preset--spacing--heading)}
 .abrang-home .abrang-tiles,.abrang-home .abrang-audiences,.abrang-home .abrang-features,.abrang-home .abrang-products {margin-block:0}
 .abrang-home .abrang-hero {margin-block:0}
-.abrang-home .abrang-trust-band {box-sizing:border-box;max-width:none!important;width:100vw;margin-inline:calc(50% - 50vw)!important;padding:40px clamp(16px,4vw,48px);background:var(--wp--preset--color--mist)}
+.abrang-home .abrang-trust-band {box-sizing:border-box;max-width:none!important;width:100vw;margin-inline:calc(50% - 50vw)!important;padding:40px clamp(16px,4vw,48px);background:var(--wp--preset--color--mist);margin-block-end:0!important}
 .abrang-trust-band .abrang-features {max-width:1180px;margin-inline:auto}
 .abrang-footer {margin-top:var(--wp--preset--spacing--section)!important}
+main.abrang-home + footer .abrang-footer,
+.abrang-home + footer .abrang-footer,
+body:has(main.abrang-home) .abrang-footer {margin-top:0!important}
 .abrang-card {border:1px solid transparent;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
 .abrang-card:hover,.abrang-card:focus-visible {transform:translateY(-3px);border-color:var(--wp--preset--color--indigo);box-shadow:0 6px 16px color-mix(in srgb,var(--wp--preset--color--indigo) 12%,transparent)}
 .abrang-card:focus-visible {outline:3px solid var(--wp--preset--color--indigo);outline-offset:4px}
-@media(max-width:781px){.abrang-home{--abrang-section-gap:var(--wp--preset--spacing--section-mobile)}.abrang-footer{margin-top:var(--wp--preset--spacing--section-mobile)!important}}
+@media(max-width:781px){.abrang-home{--abrang-section-gap:var(--wp--preset--spacing--section-mobile)}.abrang-footer{margin-top:var(--wp--preset--spacing--section-mobile)!important}main.abrang-home + footer .abrang-footer,.abrang-home + footer .abrang-footer,body:has(main.abrang-home) .abrang-footer{margin-top:0!important}}
 @media(prefers-reduced-motion:reduce){.abrang-card{transition:none}.abrang-card:hover,.abrang-card:focus-visible{transform:none}}

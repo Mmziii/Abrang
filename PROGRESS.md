@@ -214,12 +214,12 @@ additionally executed locally inside a php-wasm PHP 8 runtime.
 
 ## Stages
 
-- [ ] **Stage 0 — Leftover fixes from PR 2 review**
-  - mobile menu: sub-menu toggles fully inside the viewport, visible ✕ close button that works
-  - struck-through regular price: min 13px, AA-contrast muted grey, Persian digits, «تومان» not struck through twice
-  - header cart: icon + small Persian count badge only (hidden at 0), same on desktop
-  - remove the empty gap between the trust band and the footer
-  - demo fixture images match each product's name
+- [x] **Stage 0 — Leftover fixes from PR 2 review** — `style.css`, `assets/storefront.js`, `scripts/demo/{generate-images.py,products.php,images/*.png}`, `scripts/demo/remove.php`
+  - mobile menu: overlay `box-sizing:border-box`, padding 64px 16px, items padded 12px 8px, toggles 44×44 with border and `margin-inline-start:8px` — all interactive boxes fully inside 0..viewport; close button fixed 44×44 at `right:12px` with indigo/mist, `box-shadow`, `z-index:100001`; Playwright checks: background `rgb(251,248,243)`, `inert`/`overflow:hidden`, toggle geometry, close click
+  - struck-through regular price `del{font-size:13px;color:muted(#62666B 5.78:1 on white AA)}`, `opacity:1`, `line-through 1px`, Persian digits via `storefront.js` walker, `del+ins` spacing, currency not double-struck
+  - header cart: `hasHiddenPrice:true` already, CSS hides `.wc-block-mini-cart__amount/.wc-block-mini-cart__tax-label`, badge 20px coral/paper, `hidden`/`empty` hidden, Persian digits via walker, same on desktop+mobile
+  - trust-band ↔ footer gap removed: `.abrang-trust-band{margin-block-end:0}`, `main.abrang-home+footer .abrang-footer{margin-top:0!important}`
+  - demo fixtures: 12 original 800×800 CC0 drawings (`pen`→`glue-stick`) via `generate-images.py` (Vazirmatn label, `paper/mist/indigo` palette), `products.php` maps 1:1 by name, `remove.php` still removes only `_abrang_demo`
 
 - [ ] **Stage 1 — Product data model (attributes, terms, variable demo product)**
 
