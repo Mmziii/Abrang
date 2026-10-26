@@ -291,8 +291,8 @@ jobs:
             [ "$id" != "0" ] && [ -n "$id" ] || { echo "::error::SKU $sku not found id=$id"; docker compose run --rm wpcli wp post list --post_type=product --fields=post_name,post_status | head -n 20; exit 1; }
           done
           echo "--- Dry-run XLSX ---"
-          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.xlsx --dry-run 2>&1 | tee /tmp/dryrun.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::dry-run XLSX failed code=$code"; cat /tmp/dryrun.log | head -n 100; exit 1; fi
-          grep -q "بررسی آزمایشی" /tmp/dryrun.log || { echo "::error::dry-run should contain بررسی آزمایشی"; cat /tmp/dryrun.log | head -n 100; exit 1; }
+          set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.xlsx --dry-run 2>&1 | tee /tmp/dryrun.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::dry-run XLSX failed code=$code log=$(cat /tmp/dryrun.log | head -n 20 | tr '\n' ' ' | cut -c1-800)"; echo "::warning::dryrun log: $(cat /tmp/dryrun.log | head -n 30 | tr '\n' '%0A' | cut -c1-1200)"; cat /tmp/dryrun.log | head -n 100; exit 1; fi
+          grep -q "بررسی آزمایشی" /tmp/dryrun.log || { echo "::error::dry-run should contain بررسی آزمایشی log=$(cat /tmp/dryrun.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/dryrun.log | head -n 100; exit 1; }
           cat > import/broken.csv <<'CSV'
           sku,name,category_slug,regular_price,sale_price,stock_qty,short_description,description,brand,color,size,material,pack_size,weight_grams,tags,status
           ABR-001,تست تکراری,pens,50000,,5,test,test,آبرنگ,آبی,متوسط,کاغذ,1,10,test,publish
