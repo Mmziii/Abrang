@@ -227,7 +227,12 @@ additionally executed locally inside a php-wasm PHP 8 runtime.
   - simple demo products now carry 5 taxonomy attributes (brand/color/size/material/pack-size) + weight + tag `demo-tag` نمونه, visible on page, stock/price unchanged
   - variable demo product `DEMO-VAR-1` خودکار چهار رنگ with 4 variations by `pa_color` (blue 12, black 5, green 3, red 0 out-of-stock), distinct prices, manage stock, variation images `pen-{colour}.png`, all marked `_abrang_demo`; `remove.php` now deletes `product_variation` and unused `_abrang_demo` terms; `setup.sh` calls `attributes.php` and sets `woocommerce_review_rating_verification_required=yes` idempotently; `php-parser` + `bash -n` pass
 
-- [ ] **Stage 2 — Bulk product import from Excel/CSV + images by SKU**
+- [x] **Stage 2 — Bulk product import from Excel/CSV + images by SKU** — `docs/products-template.{csv,xlsx}`, `scripts/{import-products.php,import-products.sh,import-images.php,import-images.sh}`, `import/README.txt`, `docker-compose.yml`, `.gitignore`, `scripts/setup.sh` (weight unit)
+  - CSV UTF-8-BOM با 16 ستون فارسی‌دوست و 3 ردیف نمونه؛ XLSX هم‌ستون‌ها با ردیف 2 توضیح فارسی، کامنت روی هر سربرگ، اعتبارسنجی status `publish,draft` و اعداد صحیح برای قیمت/موجودی/وزن، فریز سربرگ و فیلتر؛ تولید با `openpyxl` در `scripts/demo/generate-images.py` الگو
+  - `import-products.php` (ZipArchive+SimpleXML خوانش XLSX بدون وابستگی خارجی — توضیح در سربرگ) — اعتبارسنجی کامل پیش از هر واردات، گزارش فارسی ردیف‌محور (sku خالی، دستهٔ ناشناس، قیمت غیرعددی، حراج ≥ اصلی، SKU تکراری)، بدون واردات در صورت خطا مگر `--skip-invalid`، ایجاد/به‌روزرسانی بر اساس SKU، نرمال‌سازی ارقام فارسی/عربی و کاما، ساخت خودکار دسته/برچسب/ویژگی‌ها، پشتیبانی `--dry-run`; wrapper `import-products.sh` مسیر `/import` را حل می‌کند
+  - `import-images.php/.sh`: پوشه یا zip، الگو `SKU.jpg` اصلی و `SKU-2.jpg`... گالری (jpg/jpeg/png/webp بی‌حساس به حروف)، تکرارناپذیری با هش فایل (`_abrang_import_hash`)، گزارش SKUهای بدون تصویر و تصاویر بدون SKU، پشتیبانی `--dry-run`
+  - `./import` git-ignored با `README.txt` فارسی، در `docker-compose.yml` به صورت `ro` به `wpcli` سوار شد (`./import:/import:ro`)
+  - اعتبارسنجی محلی: `bash -n`, `php-parser` برای هر PHP، BOM و XLSX خوانده شد، خوانش XLSX با ZipArchive تست منطقی
 
 - [ ] **Stage 3 — Shop and category archive template**
 

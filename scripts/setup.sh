@@ -259,6 +259,8 @@ ensure_option woocommerce_price_num_decimals "0"
 ensure_option woocommerce_price_thousand_sep "٬"
 wp eval-file /scripts/persian-display.php
 ensure_option woocommerce_price_decimal_sep  "."
+ensure_option woocommerce_weight_unit        "g"
+ensure_option woocommerce_dimension_unit     "cm"
 
 onboarding="$(wp option get woocommerce_onboarding_profile --format=json 2>/dev/null || printf '')"
 case "$onboarding" in
