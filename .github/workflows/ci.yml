@@ -277,11 +277,11 @@ jobs:
           cp docs/products-template.csv import/template.csv
           cp docs/products-template.xlsx import/template.xlsx
           echo "--- Import template.csv (1st) ---"
-          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv || { echo "::error::import template.csv 1st failed"; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | head -n 100; exit 1; }
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import1.log; test ${PIPESTATUS[0]} -eq 0 || { echo "::error::import template.csv 1st failed"; cat /tmp/import1.log | head -n 200; exit 1; }
           COUNT=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r')
           echo "Total products after first import: $COUNT"
           echo "--- Import template.csv (2nd, idempotency) ---"
-          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv || { echo "::error::import template.csv 2nd failed"; exit 1; }
+          docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import2.log; test ${PIPESTATUS[0]} -eq 0 || { echo "::error::import template.csv 2nd failed"; cat /tmp/import2.log | head -n 200; exit 1; }
           COUNT2=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r')
           echo "After second import: $COUNT2"
           [ "$COUNT" = "$COUNT2" ] || { echo "::error::idempotency failed COUNT=$COUNT COUNT2=$COUNT2"; exit 1; }
