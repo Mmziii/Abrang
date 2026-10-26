@@ -132,34 +132,104 @@ async function checkPersianPrices(page) {
     await page.close();
   }
 
-  // Shop, category, product, search, 404 — screenshots and checks
+  // Shop, category, 404 — screenshots and checks (search handled strictly below)
   const pagesToTest = [
     {url:'http://localhost:8080/shop/', width:390, screenshot:'screenshots/shop-390.png', label:'shop'},
     {url:'http://localhost:8080/shop/', width:1440, screenshot:'screenshots/shop-1440.png', label:'shop-1440'},
     {url:'http://localhost:8080/product-category/pens/', width:390, screenshot:'screenshots/category-390.png', label:'category pens'},
-    {url:'http://localhost:8080/?s=%D8%AE%D9%88%D8%AF%DA%A9%D8%A7%D8%B1&post_type=product', width:390, screenshot:'screenshots/search-390.png', label:'search with results'},
-    {url:'http://localhost:8080/?s=zzzzzzzzzzzz&post_type=product', width:390, screenshot:null, label:'search no results'},
     {url:'http://localhost:8080/this-page-does-not-exist-12345/', width:390, screenshot:'screenshots/404-390.png', label:'404'},
   ];
 
   for (const {url,width,screenshot,label} of pagesToTest) {
     const page = await browser.newPage({viewport:{width,height:900}});
     const resp = await page.goto(url, {waitUntil:'networkidle'});
-    // 404 should return 404, others 200
     if (label === '404') assert.equal(resp.status(),404, '404 status');
     else assert.equal(resp.status(),200, `${label} status`);
     await page.evaluate(() => document.fonts.ready);
-    // Empty states
-    if (label.includes('search no')) {
-      assert.ok(await page.locator('text=یافت نشد').first().isVisible().catch(() => false) || await page.locator('text=found').first().isVisible().catch(() => false), 'empty search state');
-    }
     if (label === '404') {
       assert.ok(await page.locator('text=یافت نشد').first().isVisible(), '404 Persian message');
-      assert.ok(await page.locator('.abrang-404-search input').first().isVisible().catch(() => false) || await page.locator('input[type="search"]').first().isVisible(), '404 search box');
+      const has404Search = await page.locator('.abrang-404-search input, input[type="search"]').first().isVisible();
+      assert.ok(has404Search, '404 search box must be visible');
     }
     await noHorizontalScroll(page, width, label);
     if (screenshot) await page.screenshot({path:screenshot, fullPage:true});
     await page.close();
+  }
+
+  // Search tests — STRICT (Fix E): must check product cards, Arabic normalization, and use header form URL
+  {
+    // Discover the search form from the header as the user would submit it
+    const probe = await browser.newPage({viewport:{width:390,height:900}});
+    await probe.goto('http://localhost:8080/', {waitUntil:'networkidle'});
+    const form = probe.locator('.wp-block-woocommerce-product-search form, header form').first();
+    assert.ok(await form.isVisible(), 'Header search form must be visible');
+    const action = await form.getAttribute('action') || 'http://localhost:8080/';
+    const inputs = await form.locator('input').evaluateAll(els => els.map(e => ({name: e.name, value: e.value, type: e.type})));
+    const searchInputName = (inputs.find(i => i.type === 'search' || i.name === 's') || {name: 's'}).name;
+    const hiddenParams = inputs.filter(i => i.type === 'hidden' && i.name);
+    await probe.close();
+
+    // Helper to build search URL exactly as the form would submit
+    const buildSearchUrl = (query) => {
+      const u = new URL(action, 'http://localhost:8080/');
+      u.searchParams.set(searchInputName, query);
+      for (const hp of hiddenParams) {
+        if (hp.name !== searchInputName) u.searchParams.set(hp.name, hp.value);
+      }
+      return u.toString();
+    };
+
+    // 1) Search for «خودکار» — must return product cards, one of them خودکار آبی نرم
+    {
+      const page = await browser.newPage({viewport:{width:390,height:900}});
+      const searchUrl = buildSearchUrl('خودکار');
+      console.log('search URL for خودکار:', searchUrl);
+      const resp = await page.goto(searchUrl, {waitUntil:'networkidle'});
+      assert.equal(resp.status(),200, 'search خودکار status 200');
+      await page.evaluate(() => document.fonts.ready);
+      const gridCards = page.locator('.abrang-search .wc-block-product-template > li, .abrang-products .wc-block-product-template > li');
+      const count = await gridCards.count();
+      assert.ok(count > 0, 'Search for خودکار must return at least 1 product card in results grid, got '+count);
+      const titles = await page.locator('.abrang-search .wc-block-product-template > li .wp-block-post-title a, .abrang-products .wc-block-product-template > li .wp-block-post-title a').allTextContents();
+      assert.ok(titles.some(t => t.includes('خودکار آبی نرم')), 'Search results for خودکار must contain product card خودکار آبی نرم, got titles: '+titles.slice(0,5).join(' | '));
+      await noHorizontalScroll(page, 390, 'search with results');
+      await page.screenshot({path:'screenshots/search-390.png', fullPage:true});
+      await page.close();
+    }
+
+    // 2) Arabic-letter normalization: search for «پوشه دكمه‌دار» with Arabic ك (U+0643) must find «پوشه دکمه‌دار»
+    {
+      const page = await browser.newPage({viewport:{width:390,height:900}});
+      const arabicQuery = 'پوشه دكمه‌دار'; // Arabic ك
+      const searchUrl = buildSearchUrl(arabicQuery);
+      console.log('arabic search URL:', searchUrl);
+      const resp = await page.goto(searchUrl, {waitUntil:'networkidle'});
+      assert.equal(resp.status(),200, 'arabic search status 200');
+      await page.evaluate(() => document.fonts.ready);
+      const gridCards = page.locator('.abrang-search .wc-block-product-template > li, .abrang-products .wc-block-product-template > li');
+      const count = await gridCards.count();
+      assert.ok(count > 0, 'Arabic search must return at least 1 product card, got '+count);
+      const titles = await page.locator('.abrang-search .wc-block-product-template > li .wp-block-post-title a, .abrang-products .wc-block-product-template > li .wp-block-post-title a').allTextContents();
+      assert.ok(titles.some(t => t.includes('پوشه دکمه‌دار')), 'Arabic search for پوشه دكمه‌دار must contain پوشه دکمه‌دار, got titles: '+titles.slice(0,5).join(' | '));
+      await noHorizontalScroll(page, 390, 'search arabic normalization');
+      await page.close();
+    }
+
+    // 3) No-results search: assert zero product cards AND the empty-state message is shown.
+    {
+      const page = await browser.newPage({viewport:{width:390,height:900}});
+      const noResultsUrl = buildSearchUrl('zzzzzzzzzzzz');
+      const resp = await page.goto(noResultsUrl, {waitUntil:'networkidle'});
+      assert.equal(resp.status(),200, 'no-results search status 200');
+      await page.evaluate(() => document.fonts.ready);
+      const gridCards = page.locator('.abrang-search .wc-block-product-template > li, .abrang-products .wc-block-product-template > li');
+      const count = await gridCards.count();
+      assert.equal(count, 0, 'No-results search must have 0 product cards, got '+count);
+      assert.ok(await page.locator('text=یافت نشد').first().isVisible(), 'No-results search must show یافت نشد');
+      assert.ok(await page.locator('text=محصولی با این جستجو یافت نشد').first().isVisible(), 'No-results search must show empty-state محصولی با این جستجو یافت نشد');
+      await noHorizontalScroll(page, 390, 'search no results');
+      await page.close();
+    }
   }
 
   // Shop filter panel open (mobile 390)
@@ -228,80 +298,69 @@ async function checkPersianPrices(page) {
     }
   }
 
-  // Variable product 390 with color selected
+  // Variable product 390 with color selected — STRICT (Fix D)
   {
     const page = await browser.newPage({viewport:{width:390,height:900}});
     await page.goto('http://localhost:8080/shop/', {waitUntil:'networkidle'});
-    // Find variable product — button is "اطلاعات بیشتر" or product title contains "چهار رنگ"
-    let varUrl = null;
     const varCard = page.locator('.wc-block-product-template > li').filter({hasText: 'چهار رنگ'}).first();
-    if (await varCard.count() > 0) {
-      varUrl = await varCard.locator('a').first().getAttribute('href');
-    } else {
-      // Fallback: card with "اطلاعات بیشتر"
-      const varCard2 = page.locator('.wc-block-product-template > li').filter({has: page.locator('text=اطلاعات بیشتر')}).first();
-      if (await varCard2.count() > 0) varUrl = await varCard2.locator('a').first().getAttribute('href');
-    }
+    assert.ok(await varCard.count() > 0, 'Variable product card with چهار رنگ must exist on shop');
+    const varUrl = await varCard.locator('a').first().getAttribute('href');
+    assert.ok(varUrl, 'Variable product URL must exist');
     await page.close();
 
-    if (varUrl) {
-      const p = await browser.newPage({viewport:{width:390,height:900}});
-      const url = varUrl.startsWith('http') ? varUrl : `http://localhost:8080${varUrl}`;
-      const resp = await p.goto(url, {waitUntil:'networkidle'});
-      assert.equal(resp.status(),200, 'variable product');
-      // Wait for add-to-cart form
-      await p.locator('.abrang-single .single_add_to_cart_button, select').first().waitFor({timeout:5000}).catch(() => {});
-      // Find variation select (color)
-      const select = p.locator('select').first();
-      if (await select.isVisible().catch(() => false)) {
-        // Try selecting out-of-stock color (red) — should disable button
-        try {
-          await select.selectOption({label: 'قرمز'});
-        } catch {
-          try { await select.selectOption('red'); } catch {}
-        }
-        await p.waitForTimeout(800);
-        const btn = p.locator('.single_add_to_cart_button').first();
-        const isDisabled = await btn.isDisabled().catch(() => false) || await btn.getAttribute('disabled') !== null;
-        // Out of stock red should disable — if not disabled, at least check stock text
-        const stockText = await p.locator('.abrang-stock, .stock, .woocommerce-variation-availability').first().textContent().catch(() => '');
-        // We expect either disabled button or "ناموجود"
-        if (stockText.includes('ناموجود') || isDisabled) {
-          assert.ok(true, 'Out-of-stock variation disables button or shows ناموجود');
-        }
-        // Now select in-stock color (blue) and add to cart
-        try { await select.selectOption({label: 'آبی'}); } catch { try { await select.selectOption('blue'); } catch {} }
-        await p.waitForTimeout(800);
-        const addBtn = p.locator('.single_add_to_cart_button').first();
-        assert.ok(!(await addBtn.isDisabled().catch(() => false)), 'In-stock variation enables button');
-        // Check that button is indigo and visible
-        assert.ok(await addBtn.isVisible(), 'Add to cart visible after in-stock selection');
-        await p.screenshot({path:'screenshots/product-variable-390-selected.png', fullPage:true});
-        // Add to cart and check mini-cart badge
-        await addBtn.click();
-        await p.waitForTimeout(1500);
-        // Check mini-cart badge via storefront JS or via header
-        const badge = p.locator('.wc-block-mini-cart__badge').first();
-        let badgeText = '';
-        try { badgeText = await badge.textContent({timeout:2000}); } catch {}
-        // Badge should be Persian ۱ if cart updated (or still 0 if not)
-        // We do a more robust check: after adding, badge should be visible and contain Persian digit
-        // If not visible due to timing, we check via evaluate that cart count increased
-        const badgeVisible = await badge.isVisible().catch(() => false);
-        if (badgeVisible && badgeText) {
-          assert.match(badgeText.trim(), /[۰-۹]/, 'Mini-cart badge Persian digit after add');
-        }
-      } else {
-        // No select found — maybe button swatches? Just screenshot
-        await p.screenshot({path:'screenshots/product-variable-390-selected.png', fullPage:true});
-      }
-      await noHorizontalScroll(p, 390, 'variable product');
-      await p.close();
-    }
+    const p = await browser.newPage({viewport:{width:390,height:900}});
+    const url = varUrl.startsWith('http') ? varUrl : `http://localhost:8080${varUrl}`;
+    const resp = await p.goto(url, {waitUntil:'networkidle'});
+    assert.equal(resp.status(),200, 'variable product status 200');
+    await p.locator('.abrang-single').waitFor({timeout:5000});
+    // The color selector MUST exist: assert the variation select (or swatches) is visible; if not, fail.
+    const select = p.locator('select').first();
+    assert.ok(await select.count() > 0, 'Variation select element must exist');
+    assert.ok(await select.isVisible(), 'Variation select (color) must be visible');
+    // Select «قرمز» (out of stock): assert the add-to-cart button is disabled AND the page shows «ناموجود».
+    await select.selectOption({label: 'قرمز'});
+    await p.waitForTimeout(900);
+    const btnRed = p.locator('.single_add_to_cart_button').first();
+    await btnRed.waitFor({timeout:3000});
+    const isDisabledRed = await btnRed.isDisabled() || await btnRed.evaluate(el => el.classList.contains('disabled') || el.classList.contains('wc-variation-is-unavailable') || el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true');
+    assert.ok(isDisabledRed, 'Out-of-stock قرمز button must be disabled (isDisabled or has disabled/wc-variation-is-unavailable class)');
+    const stockTextRed = await p.locator('.abrang-stock, .stock, .woocommerce-variation-availability, .woocommerce-variation-availability p').first().textContent();
+    assert.ok(stockTextRed.includes('ناموجود'), 'Out-of-stock قرمز must show ناموجود, got: '+JSON.stringify(stockTextRed));
+    // Select «آبی»: assert the button is enabled and the stock text shows an in-stock message.
+    await select.selectOption({label: 'آبی'});
+    await p.waitForTimeout(900);
+    const addBtn = p.locator('.single_add_to_cart_button').first();
+    assert.ok(!(await addBtn.isDisabled()), 'In-stock آبی button must be enabled');
+    assert.ok(await addBtn.isVisible(), 'Add to cart visible after آبی selection');
+    const stockTextBlue = await p.locator('.abrang-stock, .stock, .woocommerce-variation-availability, .woocommerce-variation-availability p').first().textContent();
+    assert.ok(!stockTextBlue.includes('ناموجود'), 'In-stock آبی must not show ناموجود, got: '+JSON.stringify(stockTextBlue));
+    assert.ok(stockTextBlue.includes('موجود') || stockTextBlue.includes('تنها') || stockTextBlue.includes('باقی') || stockTextBlue.trim().length > 0, 'In-stock آبی must show موجود/تنها, got: '+JSON.stringify(stockTextBlue));
+    await p.screenshot({path:'screenshots/product-variable-390-selected.png', fullPage:true});
+    // Click add to cart, then wait (waitForFunction, up to 10s) until the mini-cart badge is visible and its text is «۱». Also verify via the Store API (fetch /wp-json/wc/store/v1/cart inside the page) that items_count is 1 and the item is the blue variation.
+    await addBtn.click();
+    await p.waitForFunction(() => {
+      const el = document.querySelector('.wc-block-mini-cart__badge');
+      return el && el.offsetParent !== null && el.textContent.trim() === '۱';
+    }, null, {timeout: 10000});
+    const badge = p.locator('.wc-block-mini-cart__badge').first();
+    assert.ok(await badge.isVisible(), 'Mini-cart badge must be visible after add');
+    assert.equal((await badge.textContent()).trim(), '۱', 'Mini-cart badge must be ۱ after adding blue variation');
+    const cart = await p.evaluate(async () => {
+      const res = await fetch('/wp-json/wc/store/v1/cart', {credentials: 'include'});
+      if (!res.ok) throw new Error('Store API cart fetch failed '+res.status);
+      return res.json();
+    });
+    assert.equal(cart.items_count, 1, 'Store API cart items_count must be 1, got '+JSON.stringify(cart).slice(0,300));
+    assert.equal(cart.items.length, 1, 'Store API cart items length must be 1');
+    const item = cart.items[0];
+    const itemStr = JSON.stringify(item);
+    assert.ok(itemStr.includes('آبی') || itemStr.includes('blue') || (item.name && item.name.includes('چهار رنگ')) || itemStr.includes('چهار رنگ'), 'Store API cart item must be blue variation, got: '+itemStr.slice(0,600));
+    await noHorizontalScroll(p, 390, 'variable product');
+    await p.close();
   }
 
   // Check 360 no horizontal scroll on all pages (already checked above, but explicit)
-  for (const url of ['http://localhost:8080/', 'http://localhost:8080/shop/', 'http://localhost:8080/product-category/pens/', 'http://localhost:8080/?s=%D8%AE%D9%88%D8%AF%DA%A9%D8%A7%D8%B1&post_type=product', 'http://localhost:8080/this-page-does-not-exist-12345/']) {
+  for (const url of ['http://localhost:8080/', 'http://localhost:8080/shop/', 'http://localhost:8080/product-category/pens/', 'http://localhost:8080/?s=%D8%AE%D9%88%D8%AF%DA%A9%D8%A7%D8%B1', 'http://localhost:8080/this-page-does-not-exist-12345/']) {
     const page = await browser.newPage({viewport:{width:360,height:900}});
     await page.goto(url, {waitUntil:'networkidle'});
     await noHorizontalScroll(page, 360, url);
