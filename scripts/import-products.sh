@@ -49,5 +49,5 @@ if [ -z "$resolved" ]; then
 fi
 
 # Pass through any extra flags (--dry-run, --skip-invalid) to the PHP importer.
-# Use both -- args and env vars for robustness (wp eval-file arg handling varies).
-IMPORT_FILE="$resolved" IMPORT_FLAGS="$*" wp eval-file /scripts/import-products.php -- "$resolved" "$@"
+# Use env vars for robustness: wp eval-file --dry-run is interpreted as wp flag, not PHP arg.
+IMPORT_FILE="$resolved" IMPORT_FLAGS="$*" wp eval-file /scripts/import-products.php -- "$resolved"

@@ -46,4 +46,4 @@ if [ -z "$resolved" ]; then
   exit 1
 fi
 
-IMPORT_FILE="$resolved" wp eval-file /scripts/import-images.php -- "$resolved" "$@"
+IMPORT_FILE="$resolved" wp eval-file /scripts/import-images.php -- "$resolved"
