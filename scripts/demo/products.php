@@ -96,21 +96,14 @@ foreach ( $names as $i => $name ) {
             WP_CLI::log( "[already done] $sku (type mismatch, kept)" );
             continue;
         }
-        // Ensure Arabic alias for پوشه product is present for search normalization test (update existing)
+        // Ensure Arabic alias for پوشه product is present for search normalization test (update existing) — always set
         if ( 'پوشه دکمه‌دار' === $name && '' !== $name_arabic_alias ) {
-            $current_desc = $product->get_description();
-            if ( false === strpos( $current_desc, $name_arabic_alias ) ) {
-                $product->set_description( $current_desc . ' ' . $name_arabic_alias );
-                $product->save();
-                WP_CLI::log( "Updated $sku description with Arabic alias" );
-            }
-            $current_name = $product->get_name();
-            if ( false === strpos( $current_name, $name_arabic_alias ) ) {
-                $new_name = $name . ' ' . $name_arabic_alias . ' — نمونه آزمایشی';
-                $product->set_name( $new_name );
-                $product->save();
-                WP_CLI::log( "Updated $sku title with Arabic alias" );
-            }
+            $product->set_description( 'محصول ساختگی برای طراحی؛ قابل خرید واقعی نیست. ' . $name_arabic_alias );
+            $product->set_name( $name . ' ' . $name_arabic_alias . ' — نمونه آزمایشی' );
+            $product->save();
+            // Also ensure post_content directly via wp_update_post for search index
+            wp_update_post( array( 'ID' => $product->get_id(), 'post_content' => $product->get_description(), 'post_title' => $product->get_name() ) );
+            WP_CLI::log( "Updated $sku title/desc with Arabic alias" );
         }
     } else {
         $product = new WC_Product_Simple();
