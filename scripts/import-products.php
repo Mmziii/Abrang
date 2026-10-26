@@ -39,7 +39,9 @@ $dry_run  = in_array( '--dry-run', $cli_args, true );
 $skip_invalid = in_array( '--skip-invalid', $cli_args, true );
 
 if ( ! $file ) {
-    WP_CLI::error( "فایل ورودی مشخص نشده است. نمونه: wp eval-file /scripts/import-products.php /import/products.csv" );
+    $dbg_args = isset($args) ? json_encode($args) : 'no args';
+    $dbg_argv = isset($argv) ? json_encode($argv) : 'no argv';
+    WP_CLI::error( "فایل ورودی مشخص نشده است. نمونه: wp eval-file /scripts/import-products.php /import/products.csv -- args={$dbg_args} argv={$dbg_argv} file={$file} cli_args=" . json_encode($cli_args) );
 }
 if ( ! file_exists( $file ) ) {
     // Try alternative paths that the wrapper may have prepared.
