@@ -278,11 +278,13 @@ jobs:
           cp docs/products-template.xlsx import/template.xlsx
           echo "--- Import template.csv (1st) ---"
           set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import1.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::import template.csv 1st failed code=$code log=$(cat /tmp/import1.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/import1.log | head -n 100; echo "--- full log via warning ---"; echo "::warning::$(cat /tmp/import1.log | head -n 50 | tr '\n' '%0A' | cut -c1-1000)"; exit 1; fi
-          COUNT=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r')
+          COUNT=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r' 2>&1 | tee /tmp/count1.log; echo "${PIPESTATUS[0]}" > /tmp/count1code; cat /tmp/count1.log | tr -d '\r' | tail -n 1)
+          code=$(cat /tmp/count1code); if [ "$code" != "0" ]; then echo "::error::COUNT after 1st import failed code=$code log=$(cat /tmp/count1.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; exit 1; fi
           echo "Total products after first import: $COUNT"
           echo "--- Import template.csv (2nd, idempotency) ---"
           set +e; docker compose run --rm wpcli bash /scripts/import-products.sh /import/template.csv 2>&1 | tee /tmp/import2.log; code=${PIPESTATUS[0]}; set -e; if [ $code -ne 0 ]; then echo "::error::import template.csv 2nd failed code=$code log=$(cat /tmp/import2.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; cat /tmp/import2.log | head -n 100; exit 1; fi
-          COUNT2=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r')
+          COUNT2=$(docker compose run --rm wpcli wp post list --post_type=product --fields=post_name --format=count | tr -d '\r' 2>&1 | tee /tmp/count2.log; echo "${PIPESTATUS[0]}" > /tmp/count2code; cat /tmp/count2.log | tr -d '\r' | tail -n 1)
+          code2=$(cat /tmp/count2code); if [ "$code2" != "0" ]; then echo "::error::COUNT2 after 2nd import failed code=$code2 log=$(cat /tmp/count2.log | head -n 20 | tr '\n' ' ' | cut -c1-500)"; exit 1; fi
           echo "After second import: $COUNT2"
           [ "$COUNT" = "$COUNT2" ] || { echo "::error::idempotency failed COUNT=$COUNT COUNT2=$COUNT2"; exit 1; }
           for sku in ABR-001 ABR-002 ABR-003; do
