@@ -269,6 +269,10 @@ case "$onboarding" in
     ok "WooCommerce onboarding wizard marked completed/skipped" ;;
 esac
 
+# Reviews: only verified owners may leave a review (store-front requirement
+# for the product page tabs). Idempotent — preserves the value if already yes.
+ensure_option woocommerce_review_rating_verification_required "yes"
+
 # ===============================================================================
 # 7. WooCommerce standard pages (shop / cart / checkout / my account)
 # ===============================================================================
@@ -313,6 +317,7 @@ fi
 
 wp eval-file /scripts/categories.php
 wp eval-file /scripts/pages.php
+wp eval-file /scripts/attributes.php
 ensure_option show_on_front "posts"
 if [ "${ABRANG_DEMO:-0}" = "1" ]; then bash /scripts/demo.sh; fi
 

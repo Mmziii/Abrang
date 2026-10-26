@@ -196,6 +196,11 @@ IMAGES = {
     'stapler': stapler(),
     'folder': folder(),
     'glue-stick': glue_stick(),
+    # Variable demo product — the same pen in four colours, one image per variation.
+    'pen-blue': pen(INDIGO, OCHRE),
+    'pen-black': pen(INK, MIST),
+    'pen-red': pen(CORAL, OCHRE),
+    'pen-green': pen(TEAL, OCHRE),
 }
 
 if __name__ == '__main__':

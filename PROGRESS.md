@@ -221,7 +221,11 @@ additionally executed locally inside a php-wasm PHP 8 runtime.
   - trust-band ↔ footer gap removed: `.abrang-trust-band{margin-block-end:0}`, `main.abrang-home+footer .abrang-footer{margin-top:0!important}`
   - demo fixtures: 12 original 800×800 CC0 drawings (`pen`→`glue-stick`) via `generate-images.py` (Vazirmatn label, `paper/mist/indigo` palette), `products.php` maps 1:1 by name, `remove.php` still removes only `_abrang_demo`
 
-- [ ] **Stage 1 — Product data model (attributes, terms, variable demo product)**
+- [x] **Stage 1 — Product data model (attributes, terms, variable demo product)** — `scripts/attributes.php`, `scripts/demo/{products.php,remove.php,generate-images.py}`, `scripts/setup.sh`, `scripts/demo/images/pen-{blue,black,red,green}.png`
+  - global attributes `brand` برند, `color` رنگ, `size` سایز/ابعاد, `material` جنس, `pack-size` تعداد در بسته — `wc_create_attribute`/`wc_update_attribute` idempotent by slug, `has_archives:false`, archives disabled, labels preserved
+  - colour terms `blue` آبی, `black` مشکی, `red` قرمز, `green` سبز in `pa_color`, marked `_abrang_demo`, idempotent via `wp_insert_term`+`get_term_by`
+  - simple demo products now carry 5 taxonomy attributes (brand/color/size/material/pack-size) + weight + tag `demo-tag` نمونه, visible on page, stock/price unchanged
+  - variable demo product `DEMO-VAR-1` خودکار چهار رنگ with 4 variations by `pa_color` (blue 12, black 5, green 3, red 0 out-of-stock), distinct prices, manage stock, variation images `pen-{colour}.png`, all marked `_abrang_demo`; `remove.php` now deletes `product_variation` and unused `_abrang_demo` terms; `setup.sh` calls `attributes.php` and sets `woocommerce_review_rating_verification_required=yes` idempotently; `php-parser` + `bash -n` pass
 
 - [ ] **Stage 2 — Bulk product import from Excel/CSV + images by SKU**
 
