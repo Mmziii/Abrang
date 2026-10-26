@@ -191,7 +191,11 @@ body:has(main.abrang-home) .abrang-footer {margin-top:0!important}
  .abrang-filters-column {order:-1;width:100%}
  .abrang-archive .wc-block-product-filters {border:0;padding:0;background:transparent}
  .abrang-archive .wc-block-product-filters__open-overlay {display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:10px 16px;border:1px solid var(--wp--preset--color--indigo);border-radius:8px;background:var(--wp--preset--color--paper);color:var(--wp--preset--color--indigo);font:inherit;font-weight:600}
- .abrang-archive .wc-block-product-filters__overlay {position:fixed!important;inset:0!important;z-index:100000!important;background:var(--wp--preset--color--paper)!important;padding:72px 16px 32px;overflow-y:auto}
+ .abrang-archive .wc-block-product-filters__overlay,
+ .abrang-archive .wc-block-product-filters.is-overlay-opened,
+ .abrang-archive .wc-block-product-filters__overlay .wc-block-product-filters__overlay-content,
+ .wc-block-product-filters__overlay,
+ .wc-block-product-filters.is-overlay-opened {position:fixed!important;inset:0!important;z-index:100000!important;background:var(--wp--preset--color--paper)!important;background-color:#fbf8f3!important;padding:72px 16px 32px;overflow-y:auto}
  .abrang-archive .wc-block-product-filters__close-overlay {position:fixed;top:12px;inset-inline-end:12px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid var(--wp--preset--color--mist);border-radius:8px;background:var(--wp--preset--color--paper);color:var(--wp--preset--color--indigo)}
 }
 .abrang-empty {padding:48px 16px;text-align:center}
