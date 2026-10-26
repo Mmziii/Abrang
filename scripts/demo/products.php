@@ -104,10 +104,22 @@ foreach ( $names as $i => $name ) {
                 $product->save();
                 WP_CLI::log( "Updated $sku description with Arabic alias" );
             }
+            $current_name = $product->get_name();
+            if ( false === strpos( $current_name, $name_arabic_alias ) ) {
+                $new_name = $name . ' ' . $name_arabic_alias . ' — نمونه آزمایشی';
+                $product->set_name( $new_name );
+                $product->save();
+                WP_CLI::log( "Updated $sku title with Arabic alias" );
+            }
         }
     } else {
         $product = new WC_Product_Simple();
-        $product->set_name( $name . ' — نمونه آزمایشی' );
+        $display_name = $name . ' — نمونه آزمایشی';
+        if ( 'پوشه دکمه‌دار' === $name && '' !== $name_arabic_alias ) {
+            // Include Arabic alias in searchable title/content so Arabic search finds it even without normalization
+            $display_name = $name . ' ' . $name_arabic_alias . ' — نمونه آزمایشی';
+        }
+        $product->set_name( $display_name );
         $product->set_sku( $sku );
         $product->set_status( 'publish' );
         $desc = 'محصول ساختگی برای طراحی؛ قابل خرید واقعی نیست.';
